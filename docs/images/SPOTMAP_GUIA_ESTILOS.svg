@@ -1,0 +1,201 @@
+<svg width="3200" height="2400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3200 2400">
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+        .title { font-size: 36px; font-weight: bold; fill: #1E3A8A; }
+        .section-title { font-size: 18px; font-weight: bold; fill: white; }
+        .color-label { font-size: 12px; fill: #1F2937; font-weight: 500; }
+        .legend { font-size: 12px; fill: #4B5563; }
+        text { font-family: 'Segoe UI', Arial, sans-serif; }
+      ]]>
+    </style>
+  </defs>
+  
+  <rect width="3200" height="2400" fill="#FAFAFA"/>
+  
+  <!-- Header -->
+  <rect width="3200" height="80" fill="#F0F9FF" stroke="#0369A1" stroke-width="2"/>
+  <text x="1600" y="45" text-anchor="middle" class="title">GUIA DE ESTILOS Y SISTEMA DE DISEÑO</text>
+  <text x="1600" y="68" text-anchor="middle" class="legend" font-size="14">Paleta de Colores | Tipografia | Componentes | Spacing | Iconografia</text>
+
+  <!-- PRIMARY COLORS SECTION -->
+  <rect x="60" y="120" width="700" height="420" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="60" y="120" width="700" height="35" fill="#0369A1"/>
+  <text x="410" y="147" text-anchor="middle" class="section-title">Colores Primarios</text>
+
+  <!-- Primary Blue -->
+  <rect x="80" y="170" width="320" height="120" fill="#0369A1" rx="4"/>
+  <text x="240" y="195" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Primary Blue</text>
+  <text x="240" y="220" text-anchor="middle" class="color-label" fill="white">#0369A1</text>
+  <text x="240" y="245" text-anchor="middle" class="color-label" fill="white">RGB: 3,105,161</text>
+  <text x="80" y="310" class="color-label" font-weight="bold">Uso: Headers, Botones principales</text>
+
+  <!-- Secondary Emerald -->
+  <rect x="420" y="170" width="320" height="120" fill="#10B981" rx="4"/>
+  <text x="580" y="195" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Secondary Emerald</text>
+  <text x="580" y="220" text-anchor="middle" class="color-label" fill="white">#10B981</text>
+  <text x="580" y="245" text-anchor="middle" class="color-label" fill="white">RGB: 16,185,129</text>
+  <text x="420" y="310" class="color-label" font-weight="bold">Uso: Botones success, Validacion</text>
+
+  <!-- Accent Orange -->
+  <rect x="80" y="355" width="320" height="120" fill="#F59E0B" rx="4"/>
+  <text x="240" y="380" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Accent Orange</text>
+  <text x="240" y="405" text-anchor="middle" class="color-label" fill="white">#F59E0B</text>
+  <text x="240" y="430" text-anchor="middle" class="color-label" fill="white">RGB: 245,158,11</text>
+  <text x="80" y="495" class="color-label" font-weight="bold">Uso: Advertencias, Filtros, Moderacion</text>
+
+  <!-- Alert Red -->
+  <rect x="420" y="355" width="320" height="120" fill="#DC2626" rx="4"/>
+  <text x="580" y="380" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Alert Red</text>
+  <text x="580" y="405" text-anchor="middle" class="color-label" fill="white">#DC2626</text>
+  <text x="580" y="430" text-anchor="middle" class="color-label" fill="white">RGB: 220,38,38</text>
+  <text x="420" y="495" class="color-label" font-weight="bold">Uso: Errores, Eliminar, Reportes</text>
+
+  <!-- NEUTRALS & GRAYSCALE -->
+  <rect x="820" y="120" width="650" height="420" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="820" y="120" width="650" height="35" fill="#6B7280"/>
+  <text x="1145" y="147" text-anchor="middle" class="section-title">Escala de Grises</text>
+
+  <!-- Grayscale samples -->
+  <rect x="840" y="170" width="100" height="100" fill="#F9FAFB" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="890" y="200" text-anchor="middle" class="color-label">White</text>
+  <text x="890" y="220" text-anchor="middle" class="color-label" font-size="10">#F9FAFB</text>
+
+  <rect x="960" y="170" width="100" height="100" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="1010" y="200" text-anchor="middle" class="color-label">Light</text>
+  <text x="1010" y="220" text-anchor="middle" class="color-label" font-size="10">#F3F4F6</text>
+
+  <rect x="1080" y="170" width="100" height="100" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="1" rx="2"/>
+  <text x="1130" y="200" text-anchor="middle" class="color-label">Medium</text>
+  <text x="1130" y="220" text-anchor="middle" class="color-label" font-size="10">#E5E7EB</text>
+
+  <rect x="1200" y="170" width="100" height="100" fill="#9CA3AF" stroke="#6B7280" stroke-width="1" rx="2"/>
+  <text x="1250" y="200" text-anchor="middle" class="color-label" fill="white">Dark</text>
+  <text x="1250" y="220" text-anchor="middle" class="color-label" fill="white" font-size="10">#9CA3AF</text>
+
+  <!-- TYPOGRAPHY -->
+  <rect x="1550" y="120" width="1590" height="420" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="1550" y="120" width="1590" height="35" fill="#7C3AED"/>
+  <text x="2345" y="147" text-anchor="middle" class="section-title">Tipografia</text>
+
+  <!-- Font Family -->
+  <text x="1570" y="190" class="color-label" font-weight="bold">Familia: Segoe UI | Arial | sans-serif</text>
+  
+  <!-- Heading Styles -->
+  <text x="1570" y="230" style="font-size: 32px; font-weight: bold; fill: #1F2937;">H1 - Titulo Principal (32px)</text>
+  <text x="1570" y="270" style="font-size: 28px; font-weight: bold; fill: #1F2937;">H2 - Subtitulo (28px)</text>
+  <text x="1570" y="305" style="font-size: 24px; font-weight: bold; fill: #1F2937;">H3 - Seccion (24px)</text>
+  
+  <!-- Body Text -->
+  <text x="1570" y="345" style="font-size: 16px; fill: #1F2937;">Body Regular - Texto principal (16px)</text>
+  <text x="1570" y="375" style="font-size: 14px; fill: #4B5563;">Body Secondary - Texto secundario (14px)</text>
+  <text x="1570" y="400" style="font-size: 12px; fill: #6B7280;">Small - Etiquetas y notas (12px)</text>
+
+  <!-- BUTTONS SECTION -->
+  <rect x="60" y="600" width="680" height="280" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="60" y="600" width="680" height="35" fill="#10B981"/>
+  <text x="400" y="627" text-anchor="middle" class="section-title">Botones</text>
+
+  <!-- Button States -->
+  <text x="80" y="665" class="color-label" font-weight="bold">Estados:</text>
+  
+  <rect x="80" y="680" width="120" height="40" fill="#0369A1" stroke="#0369A1" stroke-width="2" rx="4"/>
+  <text x="140" y="708" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Default</text>
+
+  <rect x="220" y="680" width="120" height="40" fill="#0359A1" stroke="#0369A1" stroke-width="2" rx="4"/>
+  <text x="280" y="708" text-anchor="middle" class="color-label" fill="white" font-weight="bold">Hover</text>
+
+  <rect x="360" y="680" width="120" height="40" fill="#E5E7EB" stroke="#9CA3AF" stroke-width="2" rx="4"/>
+  <text x="420" y="708" text-anchor="middle" class="color-label" fill="#6B7280">Disabled</text>
+
+  <!-- INPUT FIELDS -->
+  <rect x="800" y="600" width="680" height="280" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="800" y="600" width="680" height="35" fill="#F59E0B"/>
+  <text x="1140" y="627" text-anchor="middle" class="section-title">Campos de Entrada</text>
+
+  <!-- Text Input -->
+  <text x="820" y="665" class="color-label" font-weight="bold">Tipos de input:</text>
+  <rect x="820" y="680" width="320" height="40" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <text x="830" y="708" class="color-label" fill="#9CA3AF">Placeholder text...</text>
+
+  <rect x="820" y="735" width="320" height="40" fill="white" stroke="#0369A1" stroke-width="2" rx="4"/>
+  <text x="830" y="763" class="color-label">Con contenido</text>
+
+  <!-- CARDS & SPACING -->
+  <rect x="1550" y="600" width="1590" height="280" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="1550" y="600" width="1590" height="35" fill="#DC2626"/>
+  <text x="2345" y="627" text-anchor="middle" class="section-title">Tarjetas y Espaciado</text>
+
+  <!-- Card Example -->
+  <rect x="1570" y="660" width="550" height="180" fill="white" stroke="#E5E7EB" stroke-width="2" rx="6"/>
+  <rect x="1570" y="660" width="550" height="120" fill="#E0F2FE" rx="4"/>
+  <text x="1845" y="725" text-anchor="middle" style="font-size: 14px; fill: #6B7280;">Imagen o contenido</text>
+
+  <!-- Spacing Scale -->
+  <text x="2160" y="675" class="color-label" font-weight="bold">Espaciado (Escala):</text>
+  <text x="2160" y="700" class="color-label">xs = 4px | sm = 8px | md = 16px</text>
+  <text x="2160" y="720" class="color-label">lg = 24px | xl = 32px | 2xl = 48px</text>
+
+  <!-- ICONS SECTION -->
+  <rect x="60" y="950" width="1070" height="250" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="60" y="950" width="1070" height="35" fill="#7C3AED"/>
+  <text x="595" y="977" text-anchor="middle" class="section-title">Iconografia</text>
+
+  <text x="80" y="1020" class="color-label" font-weight="bold">Emojis principales (consistentes):</text>
+  <text x="80" y="1045" class="color-label">Ubicacion, Mapa, Busqueda, Destino, Valoracion</text>
+  <text x="80" y="1065" class="color-label">Usuario, Comentario, Favorito, Foto, Categoria</text>
+  <text x="80" y="1085" class="color-label">Reportar, Advertencia, Confirmado, Eliminar, Configuracion</text>
+  <text x="80" y="1105" class="color-label">Admin, Basura, Seguridad, Global, Crear</text>
+
+  <!-- RESPONSIVE SECTION -->
+  <rect x="1200" y="950" width="940" height="250" fill="white" stroke="#E5E7EB" stroke-width="2" rx="4"/>
+  <rect x="1200" y="950" width="940" height="35" fill="#10B981"/>
+  <text x="1670" y="977" text-anchor="middle" class="section-title">Responsive Efectos</text>
+
+  <text x="1220" y="1020" class="color-label" font-weight="bold">Breakpoints:</text>
+  <text x="1220" y="1045" class="color-label">Mobile: 320px-768px | Tablet: 768px-1024px | Desktop: 1024px+</text>
+
+  <text x="1220" y="1075" class="color-label" font-weight="bold">Sombras:</text>
+  <text x="1220" y="1100" class="color-label">Suave: 0 1px 3px rgba(0,0,0,0.1)</text>
+  <text x="1220" y="1120" class="color-label">Media: 0 4px 12px rgba(0,0,0,0.15)</text>
+  <text x="1220" y="1140" class="color-label">Destacada: 0 10px 30px rgba(0,0,0,0.2)</text>
+
+  <!-- FOOTER INFO -->
+  <rect y="1260" width="3200" height="1140" fill="#F0F9FF" stroke="#0369A1" stroke-width="2"/>
+
+  <text x="100" y="1310" class="legend" font-weight="bold" font-size="14">Paleta Completa de Aplicacion:</text>
+  
+  <text x="100" y="1345" class="legend" font-weight="bold">Colores Principales:</text>
+  <text x="100" y="1370" class="legend">Primary: #0369A1 (Cyan) - Headers, botones principales, links activos</text>
+  <text x="100" y="1390" class="legend">Secondary: #10B981 (Esmeralda) - Acciones positivas, validaciones, exito</text>
+  <text x="100" y="1410" class="legend">Accent: #F59E0B (Ambar) - Advertencias, moderacion, capturas atencion</text>
+  <text x="100" y="1430" class="legend">Alert: #DC2626 (Rojo) - Errores, eliminacion, estados criticos</text>
+
+  <text x="100" y="1465" class="legend" font-weight="bold">Tipografia (Stack):</text>
+  <text x="100" y="1490" class="legend">Fuente: 'Segoe UI', Arial, sans-serif (web-safe stack)</text>
+  <text x="100" y="1510" class="legend">H1: 32px bold | H2: 28px bold | H3: 24px bold | Body: 16px regular | Small: 12px</text>
+
+  <text x="100" y="1545" class="legend" font-weight="bold">Componentes Base:</text>
+  <text x="100" y="1570" class="legend">Buttons: 4 estados (default, hover, focus, disabled) | 3 tamaños (sm, md, lg)</text>
+  <text x="100" y="1590" class="legend">Inputs: text, textarea, select, email, password | Estados: default, focus, error</text>
+  <text x="100" y="1610" class="legend">Cards: 16px padding | 4px border-radius | hover shadow lift</text>
+
+  <text x="100" y="1645" class="legend" font-weight="bold">Spacing Layout:</text>
+  <text x="100" y="1670" class="legend">Sistema de 8px: 4px | 8px | 16px | 24px | 32px | 48px | 64px</text>
+  <text x="100" y="1690" class="legend">Margenes estandar: 32px (container) | 24px (section) | 16px (element)</text>
+
+  <text x="100" y="1725" class="legend" font-weight="bold">Responsive:</text>
+  <text x="100" y="1750" class="legend">Mobile First approach | Breakpoints: 320px (mobile), 768px (tablet), 1024px (desktop)</text>
+  <text x="100" y="1770" class="legend">Maximo ancho contenedor: 1200px | Minimo: 320px</text>
+
+  <text x="100" y="1805" class="legend" font-weight="bold">Efectos Animaciones:</text>
+  <text x="100" y="1830" class="legend">Transicion estandar: 300ms ease-in-out | Hover: +10% brightness (colores)</text>
+  <text x="100" y="1850" class="legend">Shadows: suave (0 1px 3px), media (0 4px 12px), prominente (0 10px 30px)</text>
+
+  <text x="100" y="1885" class="legend" font-weight="bold">Implementacion CSS:</text>
+  <text x="100" y="1910" class="legend">Variables CSS: --primary: #0369A1 | --secondary: #10B981 | --accent: #F59E0B</text>
+  <text x="100" y="1930" class="legend">Clases utility: .btn-primary | .text-secondary | .bg-alert | .shadow-md</text>
+  <text x="100" y="1950" class="legend">Framework: Compatible con Tailwind CSS o Bootstrap 5+</text>
+
+  <text x="1600" y="2350" text-anchor="middle" class="legend" font-size="11" font-weight="bold">© 2024 SpotMap - Sistema de Diseño Profesional | Version 1.0</text>
+</svg>

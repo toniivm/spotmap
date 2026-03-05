@@ -1,0 +1,91 @@
+@startuml
+skinparam shadowing false
+skinparam backgroundColor #ffffff
+skinparam defaultFontName "Segoe UI"
+
+class ColorTokens {
+  +color-primary = #10b981
+  +color-secondary = #3b82f6
+  +color-accent = #f97316
+  +color-bg = #ffffff
+  +color-bg-soft = #f3f4f6
+  +color-text = #1f2937
+  +color-text-muted = #6b7280
+  +color-error = #ef4444
+  +color-success = #22c55e
+  +color-warning = #eab308
+}
+
+class Typography {
+  +font-family = "Inter/Roboto/system"
+  +H1 = 32px bold
+  +H2 = 24px bold
+  +H3 = 18px semi-bold
+  +Body = 16px regular
+  +Small = 14px regular
+  +Tiny = 12px regular
+  +line-height = 1.4..1.6
+}
+
+class Spacing {
+  +padding = 8/16/24/32px
+  +margin-section = 24/32px
+  +gap = 8/12/16px
+  +radius = 6px (inputs/buttons)
+  +radius-card = 8px
+  +shadow = soft level 1-2
+}
+
+class Button {
+  +primary: bg primary, text white
+  +secondary: border gray
+  +danger: bg error, text white
+  +disabled: 50% opacity
+  +hover: darken +4%
+}
+
+class Input {
+  +border gray 1px
+  +focus blue 2px
+  +padding 12px
+  +placeholder gray-light
+}
+
+class Card {
+  +bg white
+  +border #e5e7eb thin
+  +shadow soft
+  +padding 16px
+}
+
+class Badge {
+  +bg by category color
+  +text white
+  +radius 12px
+  +padding 4x8px
+}
+
+class Accessibility {
+  +contrast: WCAG AA
+  +focus-visible
+  +touch-size: >=44px
+}
+
+ColorTokens --> Button : usa colores
+ColorTokens --> Input : usa colores
+ColorTokens --> Card : usa colores
+ColorTokens --> Badge : usa colores
+Typography --> Button : tipografía
+Typography --> Input
+Typography --> Card
+Typography --> Badge
+Spacing --> Button : padding/radius
+Spacing --> Input
+Spacing --> Card
+Spacing --> Badge
+Accessibility --> Button
+Accessibility --> Input
+Accessibility --> Card
+Accessibility --> Badge
+
+@enduml

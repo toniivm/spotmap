@@ -1,0 +1,344 @@
+@startuml UI_Sitemap
+!theme plain
+
+title SpotMap - Sitemap Completo (Jerarquía de Navegación)
+
+map "**SpotMap**" as root {
+}
+
+map "**🌍 Inicio (Mapa)**" as home {
+  URL => /
+  Acceso => Público
+}
+
+' Sección Pública
+map "**👁️ Explorar**" as explore {
+  URL => /explore
+  Acceso => Público
+}
+
+map "Detalle Spot (Público)" as spot_public {
+  URL => /spots/:id
+  Acceso => Público
+  Acciones => Ver, Leer comentarios
+}
+
+map "**🔐 Autenticación**" as auth {
+  URL => /auth
+  Acceso => Público
+}
+
+map "Login" as login {
+  URL => /login
+  Acceso => Público
+}
+
+map "Registro" as register {
+  URL => /register
+  Acceso => Público
+}
+
+map "Recuperar Contraseña" as recovery {
+  URL => /recovery
+  Acceso => Público
+}
+
+map "**ℹ️ Información**" as info {
+  URL => /info
+  Acceso => Público
+}
+
+map "Sobre SpotMap" as about {
+  URL => /about
+}
+
+map "Términos y Condiciones" as terms {
+  URL => /terms
+}
+
+map "Política de Privacidad" as privacy {
+  URL => /privacy
+}
+
+map "FAQ" as faq {
+  URL => /faq
+}
+
+map "Contacto" as contact {
+  URL => /contact
+}
+
+' Sección Usuario Registrado
+map "**👤 Mi Dashboard**" as dashboard {
+  URL => /dashboard
+  Acceso => REGISTERED
+  Rol => Usuario
+}
+
+map "Detalle Spot (Auth)" as spot_auth {
+  URL => /spots/:id
+  Acceso => REGISTERED
+  Acciones => Ver, Favorito, Valorar, Comentar, Reportar
+}
+
+map "**➕ Crear Spot**" as create_spot {
+  URL => /spots/create
+  Acceso => REGISTERED
+}
+
+map "**✏️ Editar Spot**" as edit_spot {
+  URL => /spots/:id/edit
+  Acceso => REGISTERED (owner)
+}
+
+map "**👤 Mi Perfil**" as profile {
+  URL => /profile
+  Acceso => REGISTERED
+}
+
+map "Información Personal" as profile_info {
+  URL => /profile/info
+  Contenido => Avatar, Nombre, Email, Stats
+}
+
+map "Mis Spots" as my_spots {
+  URL => /profile/spots
+  Acciones => Ver, Editar, Eliminar
+}
+
+map "Mis Favoritos" as favorites {
+  URL => /profile/favorites
+  Acciones => Ver, Eliminar
+}
+
+map "Mis Comentarios" as my_comments {
+  URL => /profile/comments
+  Acciones => Ver, Editar, Eliminar
+}
+
+map "Configuración" as settings {
+  URL => /profile/settings
+  Opciones => Contraseña, Privacidad, Notificaciones
+}
+
+map "**🔔 Notificaciones**" as notifications {
+  URL => /notifications
+  Acceso => REGISTERED
+}
+
+' Sección Moderador
+map "**🛡️ Panel Moderación**" as moderation {
+  URL => /moderation
+  Acceso => MODERATOR, ADMIN
+  Rol => Moderador
+}
+
+map "Reportes Pendientes" as pending_reports {
+  URL => /moderation/pending
+  Acciones => Ver, Filtrar, Revisar
+}
+
+map "Detalle Reporte" as report_detail {
+  URL => /moderation/reports/:id
+  Acciones => Aprobar, Ocultar, Eliminar, Cerrar
+}
+
+map "Contenido Oculto" as hidden_content {
+  URL => /moderation/hidden
+  Contenido => Spots ocultos, Comentarios ocultos
+}
+
+map "Estadísticas Moderación" as mod_stats {
+  URL => /moderation/stats
+  Métricas => Reportes, Contenido eliminado, Usuarios
+}
+
+map "Historial Decisiones" as decision_history {
+  URL => /moderation/history
+  Contenido => Acciones pasadas, Moderadores
+}
+
+' Sección Administrador
+map "**⚙️ Panel Administración**" as admin {
+  URL => /admin
+  Acceso => ADMIN
+  Rol => Administrador
+}
+
+map "Dashboard Admin" as admin_dashboard {
+  URL => /admin/dashboard
+  Contenido => Métricas, Gráficos, Actividad
+  Auto-refresh => 30s
+}
+
+map "**👥 Gestión Usuarios**" as user_management {
+  URL => /admin/users
+  Acciones => Listar, Suspender, Activar, Roles, Eliminar
+}
+
+map "Detalle Usuario" as user_detail {
+  URL => /admin/users/:id
+  Contenido => Perfil, Actividad, Reportes, Spots
+}
+
+map "**📁 Gestión Contenido**" as content_management {
+  URL => /admin/content
+}
+
+map "Categorías" as categories {
+  URL => /admin/categories
+  Acciones => Crear, Editar, Eliminar, Reordenar
+}
+
+map "Etiquetas (Tags)" as tags {
+  URL => /admin/tags
+  Acciones => Crear, Editar, Eliminar, Fusionar
+}
+
+map "Gestión Spots" as spot_management {
+  URL => /admin/spots
+  Acciones => Listar, Editar, Eliminar, Destacar
+}
+
+map "Gestión Comentarios" as comment_management {
+  URL => /admin/comments
+  Acciones => Moderar, Eliminar
+}
+
+map "**📢 Gestión Reportes**" as reports_management {
+  URL => /admin/reports
+  Contenido => Todos reportes, Resueltos, Stats
+}
+
+map "**⚙️ Configuración Sistema**" as system_config {
+  URL => /admin/config
+}
+
+map "Ajustes Globales" as global_settings {
+  URL => /admin/config/global
+  Opciones => Límites, Sesión, Permisos
+}
+
+map "Tema Visual" as theme_settings {
+  URL => /admin/config/theme
+  Opciones => Claro/Oscuro, Colores
+}
+
+map "Modo Mantenimiento" as maintenance {
+  URL => /admin/config/maintenance
+  Opciones => Activar/Desactivar, Mensaje
+}
+
+map "Backups" as backups {
+  URL => /admin/config/backups
+  Acciones => Crear, Restaurar, Programar
+}
+
+map "Configuración Email" as email_config {
+  URL => /admin/config/email
+  Opciones => SMTP, Plantillas
+}
+
+map "**📜 Logs Sistema**" as logs {
+  URL => /admin/logs
+}
+
+map "Actividad Usuarios" as user_activity {
+  URL => /admin/logs/users
+  Contenido => Login, Logout, Acciones
+}
+
+map "Cambios Administrativos" as admin_changes {
+  URL => /admin/logs/admin
+  Contenido => Config, Roles, Contenido
+}
+
+map "Errores Sistema" as system_errors {
+  URL => /admin/logs/errors
+  Contenido => Errores 500, BD, Sistema
+}
+
+' Relaciones principales
+root --> home
+home --> explore
+home --> auth
+home --> info
+
+explore --> spot_public
+
+auth --> login
+auth --> register
+auth --> recovery
+
+info --> about
+info --> terms
+info --> privacy
+info --> faq
+info --> contact
+
+' Usuario Registrado
+home --> dashboard : (after login)
+dashboard --> spot_auth
+dashboard --> create_spot
+dashboard --> profile
+dashboard --> notifications
+
+spot_auth --> edit_spot : (if owner)
+
+profile --> profile_info
+profile --> my_spots
+profile --> favorites
+profile --> my_comments
+profile --> settings
+
+my_spots --> edit_spot
+
+' Moderador
+dashboard --> moderation : (if MODERATOR/ADMIN)
+moderation --> pending_reports
+moderation --> hidden_content
+moderation --> mod_stats
+moderation --> decision_history
+
+pending_reports --> report_detail
+hidden_content --> report_detail
+decision_history --> report_detail
+
+' Administrador
+dashboard --> admin : (if ADMIN)
+admin --> admin_dashboard
+admin --> user_management
+admin --> content_management
+admin --> reports_management
+admin --> system_config
+admin --> logs
+
+user_management --> user_detail
+
+content_management --> categories
+content_management --> tags
+content_management --> spot_management
+content_management --> comment_management
+
+system_config --> global_settings
+system_config --> theme_settings
+system_config --> maintenance
+system_config --> backups
+system_config --> email_config
+
+logs --> user_activity
+logs --> admin_changes
+logs --> system_errors
+
+legend right
+  |= Código Color |= Significado |
+  | <back:lightgreen>Verde</back> | Público |
+  | <back:lightblue>Azul</back> | Usuario Registrado |
+  | <back:yellow>Amarillo</back> | Moderador |
+  | <back:orange>Naranja</back> | Administrador |
+  
+  **Roles y Permisos:**
+  VISITOR < REGISTERED < MODERATOR < ADMIN
+endlegend
+
+@enduml

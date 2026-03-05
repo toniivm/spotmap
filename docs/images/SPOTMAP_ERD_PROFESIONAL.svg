@@ -1,0 +1,285 @@
+<svg width="3600" height="2800" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3600 2800">
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+        .title { font-size: 40px; font-weight: bold; fill: #0F3A66; }
+        .entity-name { font-size: 15px; font-weight: bold; fill: white; }
+        .attr-label { font-size: 11px; fill: #1F2937; }
+        .legend { font-size: 12px; fill: #4B5563; }
+        .rel-label { font-size: 10px; fill: #0369A1; font-weight: bold; }
+        line { stroke: #666; stroke-width: 2; }
+        text { font-family: 'Segoe UI', Arial, sans-serif; }
+      ]]>
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#0369A1" />
+    </marker>
+  </defs>
+
+  <rect width="3600" height="2800" fill="#F8F9FA"/>
+  
+  <!-- Header -->
+  <rect width="3600" height="80" fill="#E8F4F8" stroke="#0369A1" stroke-width="2"/>
+  <text x="1800" y="50" text-anchor="middle" class="title">DIAGRAMA ENTIDAD-RELACIÓN (E/R) - SpotMap</text>
+  <text x="1800" y="72" text-anchor="middle" class="legend">Modelo completo con 11 entidades, cardinalidades y relaciones</text>
+
+  <!-- ENTITY: USERS -->
+  <g>
+    <rect x="100" y="150" width="280" height="200" fill="#E3F2FD" stroke="#0369A1" stroke-width="3" rx="5"/>
+    <rect x="100" y="150" width="280" height="35" fill="#0369A1"/>
+    <text x="240" y="175" text-anchor="middle" class="entity-name">USERS</text>
+    
+    <text x="115" y="205" class="attr-label">id_user (PK)</text>
+    <text x="115" y="225" class="attr-label">email (UNIQUE)</text>
+    <text x="115" y="245" class="attr-label">username (UNIQUE)</text>
+    <text x="115" y="265" class="attr-label">password_hash</text>
+    <text x="115" y="285" class="attr-label">bio</text>
+    <text x="115" y="305" class="attr-label">avatar_url</text>
+    <text x="115" y="325" class="attr-label">role (Enum)</text>
+  </g>
+
+  <!-- ENTITY: SPOTS -->
+  <g>
+    <rect x="500" y="150" width="300" height="240" fill="#F0F8E3" stroke="#10B981" stroke-width="3" rx="5"/>
+    <rect x="500" y="150" width="300" height="35" fill="#10B981"/>
+    <text x="650" y="175" text-anchor="middle" class="entity-name">SPOTS</text>
+    
+    <text x="515" y="205" class="attr-label">id_spot (PK)</text>
+    <text x="515" y="225" class="attr-label">id_user (FK→USERS)</text>
+    <text x="515" y="245" class="attr-label">id_category (FK→CATEGORIES)</text>
+    <text x="515" y="265" class="attr-label">title (VARCHAR)</text>
+    <text x="515" y="285" class="attr-label">description (TEXT)</text>
+    <text x="515" y="305" class="attr-label">latitude (NUMERIC)</text>
+    <text x="515" y="325" class="attr-label">longitude (NUMERIC)</text>
+    <text x="515" y="345" class="attr-label">created_at (TIMESTAMP)</text>
+    <text x="515" y="365" class="attr-label">verified (BOOLEAN)</text>
+  </g>
+
+  <!-- ENTITY: CATEGORIES -->
+  <g>
+    <rect x="950" y="150" width="260" height="160" fill="#FFF5E6" stroke="#F59E0B" stroke-width="3" rx="5"/>
+    <rect x="950" y="150" width="260" height="35" fill="#F59E0B"/>
+    <text x="1080" y="175" text-anchor="middle" class="entity-name">CATEGORIES</text>
+    
+    <text x="965" y="205" class="attr-label">id_category (PK)</text>
+    <text x="965" y="225" class="attr-label">name (VARCHAR)</text>
+    <text x="965" y="245" class="attr-label">description (TEXT)</text>
+    <text x="965" y="265" class="attr-label">color (HEX)</text>
+    <text x="965" y="285" class="attr-label">icon (VARCHAR)</text>
+  </g>
+
+  <!-- ENTITY: COMMENTS -->
+  <g>
+    <rect x="1300" y="150" width="280" height="200" fill="#F5E6F6" stroke="#7C3AED" stroke-width="3" rx="5"/>
+    <rect x="1300" y="150" width="280" height="35" fill="#7C3AED"/>
+    <text x="1440" y="175" text-anchor="middle" class="entity-name">COMMENTS</text>
+    
+    <text x="1315" y="205" class="attr-label">id_comment (PK)</text>
+    <text x="1315" y="225" class="attr-label">id_spot (FK→SPOTS)</text>
+    <text x="1315" y="245" class="attr-label">id_user (FK→USERS)</text>
+    <text x="1315" y="265" class="attr-label">text (TEXT)</text>
+    <text x="1315" y="285" class="attr-label">rating (1-5)</text>
+    <text x="1315" y="305" class="attr-label">created_at (TIMESTAMP)</text>
+    <text x="1315" y="325" class="attr-label">updated_at (TIMESTAMP)</text>
+  </g>
+
+  <!-- ENTITY: RATINGS -->
+  <g>
+    <rect x="1700" y="150" width="260" height="160" fill="#FEE2E2" stroke="#DC2626" stroke-width="3" rx="5"/>
+    <rect x="1700" y="150" width="260" height="35" fill="#DC2626"/>
+    <text x="1830" y="175" text-anchor="middle" class="entity-name">RATINGS</text>
+    
+    <text x="1715" y="205" class="attr-label">id_rating (PK)</text>
+    <text x="1715" y="225" class="attr-label">id_spot (FK→SPOTS)</text>
+    <text x="1715" y="245" class="attr-label">id_user (FK→USERS)</text>
+    <text x="1715" y="265" class="attr-label">score (1-5)</text>
+    <text x="1715" y="285" class="attr-label">created_at (TIMESTAMP)</text>
+  </g>
+
+  <!-- ENTITY: FAVORITES -->
+  <g>
+    <rect x="2050" y="150" width="260" height="140" fill="#DCFCE7" stroke="#10B981" stroke-width="3" rx="5"/>
+    <rect x="2050" y="150" width="260" height="35" fill="#10B981"/>
+    <text x="2180" y="175" text-anchor="middle" class="entity-name">FAVORITES</text>
+    
+    <text x="2065" y="205" class="attr-label">id_favorite (PK)</text>
+    <text x="2065" y="225" class="attr-label">id_user (FK→USERS)</text>
+    <text x="2065" y="245" class="attr-label">id_spot (FK→SPOTS)</text>
+    <text x="2065" y="265" class="attr-label">created_at (TIMESTAMP)</text>
+  </g>
+
+  <!-- ENTITY: TAGS -->
+  <g>
+    <rect x="2400" y="150" width="220" height="120" fill="#E0F2FE" stroke="#0369A1" stroke-width="3" rx="5"/>
+    <rect x="2400" y="150" width="220" height="35" fill="#0369A1"/>
+    <text x="2510" y="175" text-anchor="middle" class="entity-name">TAGS</text>
+    
+    <text x="2415" y="205" class="attr-label">id_tag (PK)</text>
+    <text x="2415" y="225" class="attr-label">name (VARCHAR)</text>
+    <text x="2415" y="245" class="attr-label">slug (VARCHAR)</text>
+  </g>
+
+  <!-- ENTITY: SPOT_TAGS (Relación N:N) -->
+  <g>
+    <rect x="2700" y="170" width="240" height="120" fill="#E0F2FE" stroke="#0369A1" stroke-width="2" rx="5" stroke-dasharray="5,5"/>
+    <text x="2820" y="195" text-anchor="middle" class="entity-name" font-size="12">SPOT_TAGS</text>
+    
+    <text x="2715" y="220" class="attr-label">id_spot (PK,FK)</text>
+    <text x="2715" y="240" class="attr-label">id_tag (PK,FK)</text>
+    <text x="2715" y="260" class="attr-label">created_at</text>
+  </g>
+
+  <!-- ENTITY: IMAGES -->
+  <g>
+    <rect x="100" y="500" width="260" height="140" fill="#F0E6FF" stroke="#7C3AED" stroke-width="3" rx="5"/>
+    <rect x="100" y="500" width="260" height="35" fill="#7C3AED"/>
+    <text x="230" y="525" text-anchor="middle" class="entity-name">IMAGES</text>
+    
+    <text x="115" y="555" class="attr-label">id_image (PK)</text>
+    <text x="115" y="575" class="attr-label">id_spot (FK→SPOTS)</text>
+    <text x="115" y="595" class="attr-label">url (VARCHAR)</text>
+    <text x="115" y="615" class="attr-label">uploaded_at (TIMESTAMP)</text>
+  </g>
+
+  <!-- ENTITY: REPORTS -->
+  <g>
+    <rect x="450" y="500" width="280" height="160" fill="#FEF3C7" stroke="#F59E0B" stroke-width="3" rx="5"/>
+    <rect x="450" y="500" width="280" height="35" fill="#F59E0B"/>
+    <text x="590" y="525" text-anchor="middle" class="entity-name">REPORTS</text>
+    
+    <text x="465" y="555" class="attr-label">id_report (PK)</text>
+    <text x="465" y="575" class="attr-label">id_spot (FK→SPOTS)</text>
+    <text x="465" y="595" class="attr-label">id_reporter (FK→USERS)</text>
+    <text x="465" y="615" class="attr-label">reason (TEXT)</text>
+    <text x="465" y="635" class="attr-label">status (ENUM)</text>
+  </g>
+
+  <!-- ENTITY: NOTIFICATIONS -->
+  <g>
+    <rect x="850" y="500" width="280" height="160" fill="#E0F2FE" stroke="#0369A1" stroke-width="3" rx="5"/>
+    <rect x="850" y="500" width="280" height="35" fill="#0369A1"/>
+    <text x="990" y="525" text-anchor="middle" class="entity-name">NOTIFICATIONS</text>
+    
+    <text x="865" y="555" class="attr-label">id_notification (PK)</text>
+    <text x="865" y="575" class="attr-label">id_user (FK→USERS)</text>
+    <text x="865" y="595" class="attr-label">type (ENUM)</text>
+    <text x="865" y="615" class="attr-label">message (TEXT)</text>
+    <text x="865" y="635" class="attr-label">read_at (TIMESTAMP)</text>
+  </g>
+
+  <!-- RELATIONSHIPS - Lines with cardinality -->
+  <!-- USERS -> SPOTS (1:N) -->
+  <line x1="240" y1="350" x2="650" y2="390" stroke="#0369A1" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="420" y="365" class="rel-label">1:N</text>
+  <text x="400" y="380" class="legend">crea</text>
+
+  <!-- CATEGORIES -> SPOTS (1:N) -->
+  <line x1="1080" y1="310" x2="800" y2="250" stroke="#10B981" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="940" y="270" class="rel-label">1:N</text>
+  <text x="920" y="285" class="legend">clasifica</text>
+
+  <!-- SPOTS -> COMMENTS (1:N) -->
+  <line x1="800" y1="200" x2="1300" y2="200" stroke="#7C3AED" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1050" y="190" class="rel-label">1:N</text>
+  <text x="1040" y="210" class="legend">tiene</text>
+
+  <!-- USERS -> COMMENTS (1:N) -->
+  <line x1="380" y1="250" x2="1300" y2="240" stroke="#7C3AED" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="850" y="235" class="rel-label">1:N</text>
+
+  <!-- SPOTS -> RATINGS (1:N) -->
+  <line x1="800" y1="280" x2="1700" y2="240" stroke="#DC2626" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1250" y="250" class="rel-label">1:N</text>
+  <text x="1230" y="270" class="legend">recibe</text>
+
+  <!-- USERS -> RATINGS (1:N) -->
+  <line x1="380" y1="300" x2="1700" y2="260" stroke="#DC2626" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1050" y="270" class="rel-label">1:N</text>
+
+  <!-- USERS -> FAVORITES (1:N) -->
+  <line x1="380" y1="180" x2="2050" y2="200" stroke="#10B981" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1200" y="175" class="rel-label">1:N</text>
+
+  <!-- SPOTS -> FAVORITES (1:N) -->
+  <line x1="800" y1="220" x2="2050" y2="220" stroke="#10B981" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1420" y="210" class="rel-label">1:N</text>
+
+  <!-- SPOTS -> SPOT_TAGS (1:N) -->
+  <line x1="800" y1="230" x2="2700" y2="220" stroke="#0369A1" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="1750" y="215" class="rel-label">N:M</text>
+
+  <!-- TAGS -> SPOT_TAGS (1:N) -->
+  <line x1="2620" y1="190" x2="2700" y2="200" stroke="#0369A1" stroke-width="2" stroke-dasharray="5,5" marker-end="url(#arrowhead)"/>
+  <text x="2650" y="185" class="rel-label">1:N</text>
+
+  <!-- SPOTS -> IMAGES (1:N) -->
+  <line x1="500" y1="390" x2="230" y2="500" stroke="#7C3AED" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="360" y="440" class="rel-label">1:N</text>
+  <text x="340" y="460" class="legend">contiene</text>
+
+  <!-- SPOTS -> REPORTS (1:N) -->
+  <line x1="650" y1="390" x2="590" y2="500" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="620" y="440" class="rel-label">1:N</text>
+  <text x="600" y="460" class="legend">genera</text>
+
+  <!-- USERS -> REPORTS (1:N) -->
+  <line x1="240" y1="350" x2="530" y2="500" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="350" y="420" class="rel-label">1:N</text>
+
+  <!-- USERS -> NOTIFICATIONS (1:N) -->
+  <line x1="380" y1="320" x2="850" y2="530" stroke="#0369A1" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="560" y="420" class="rel-label">1:N</text>
+
+  <!-- LEGEND -->
+  <rect x="100" y="800" width="3400" height="1950" fill="white" stroke="#999" stroke-width="1"/>
+  
+  <text x="120" y="830" class="legend" font-weight="bold" font-size="14">INFORMACIÓN ADICIONAL Y CARACTERÍSTICAS TÉCNICAS:</text>
+  
+  <text x="120" y="870" class="legend" font-weight="bold">Claves Primarias (PK):</text>
+  <text x="120" y="890" class="legend">• Usuarios: id_user (UUID) | • Spots: id_spot (UUID) | • Categorías: id_category (INT AUTO)</text>
+  <text x="120" y="910" class="legend">• Comentarios: id_comment (INT AUTO) | • Valoraciones: id_rating (INT AUTO)</text>
+  
+  <text x="120" y="950" class="legend" font-weight="bold">Claves Foráneas (FK):</text>
+  <text x="120" y="970" class="legend">• SPOTS.id_user → USERS.id_user (ON DELETE CASCADE)</text>
+  <text x="120" y="990" class="legend">• COMMENTS.id_spot → SPOTS.id_spot (ON DELETE CASCADE)</text>
+  <text x="120" y="1010" class="legend">• RATINGS.id_spot → SPOTS.id_spot (ON DELETE CASCADE)</text>
+  <text x="120" y="1030" class="legend">• Todas las FK tienen índices para optimizar búsquedas</text>
+  
+  <text x="120" y="1070" class="legend" font-weight="bold">Restricciones Únicas (UNIQUE):</text>
+  <text x="120" y="1090" class="legend">• USERS: email, username (previene duplicados)</text>
+  <text x="120" y="1110" class="legend">• TAGS: slug (para URLs amigables)</text>
+  <text x="120" y="1130" class="legend">• SPOT_TAGS: combinación (id_spot, id_tag) → evita duplicados en relación N:N</text>
+  
+  <text x="120" y="1170" class="legend" font-weight="bold">Índices Principales:</text>
+  <text x="120" y="1190" class="legend">• Tabla SPOTS: índices en (id_user, id_category, latitude, longitude, created_at)</text>
+  <text x="120" y="1210" class="legend">• Tabla COMMENTS: índices en (id_spot, id_user, created_at)</text>
+  <text x="120" y="1230" class="legend">• Tabla RATINGS: índices en (id_spot, id_user)</text>
+  <text x="120" y="1250" class="legend">• Tabla SPOT_TAGS: índices en (id_spot, id_tag) para N:N</text>
+  
+  <text x="120" y="1290" class="legend" font-weight="bold">Tipos de Datos y Consideraciones:</text>
+  <text x="120" y="1310" class="legend">• UUID para id_user, id_spot → seguridad y escalabilidad global</text>
+  <text x="120" y="1330" class="legend">• NUMERIC para latitude/longitude → precisión geográfica sin errores de redondeo</text>
+  <text x="120" y="1350" class="legend">• TIMESTAMP para auditoría → tracking de created_at, updated_at, read_at</text>
+  <text x="120" y="1370" class="legend">• ENUM para roles y estados → integridad de dominio (PENDING, APPROVED, REJECTED)</text>
+  <text x="120" y="1390" class="legend">• BOOLEAN para flags → verified, read_at (NULL si no leído)</text>
+  
+  <text x="120" y="1430" class="legend" font-weight="bold">Relaciones Principales:</text>
+  <text x="120" y="1450" class="legend">• 1:N entre USERS y SPOTS → un usuario crea múltiples spots</text>
+  <text x="120" y="1470" class="legend">• 1:N entre CATEGORIES y SPOTS → una categoría agrupa múltiples spots</text>
+  <text x="120" y="1490" class="legend">• N:M entre SPOTS y TAGS → tabla puente SPOT_TAGS (relación muchos-a-muchos)</text>
+  <text x="120" y="1510" class="legend">• 1:N entre SPOTS y COMMENTS → un spot recibe múltiples comentarios</text>
+  <text x="120" y="1530" class="legend">• Auditoría: USERS → COMMENTS, RATINGS, FAVORITES, REPORTS, NOTIFICATIONS (tracking completo)</text>
+  
+  <text x="120" y="1570" class="legend" font-weight="bold">Normalizacion (3NF):</text>
+  <text x="120" y="1590" class="legend">• Primera Forma Normal (1FN): todos los atributos son atómicos (sin valores multivaluados)</text>
+  <text x="120" y="1610" class="legend">• Segunda Forma Normal (2FN): todos los atributos dependen completamente de la PK</text>
+  <text x="120" y="1630" class="legend">• Tercera Forma Normal (3FN): no hay dependencias transitivas entre atributos</text>
+  <text x="120" y="1650" class="legend">• Relación puente (SPOT_TAGS) resuelve la N:M respetando 3NF</text>
+  
+  <text x="120" y="1690" class="legend" font-weight="bold">Consideraciones Geoespaciales:</text>
+  <text x="120" y="1710" class="legend">• Extensión PostGIS en PostgreSQL permite queries avanzadas (distancia, área, intersecciones)</text>
+  <text x="120" y="1730" class="legend">• Índices GIST en (latitude, longitude) para búsquedas por proximidad</text>
+  <text x="120" y="1750" class="legend">• Ejemplo query: SELECT * FROM spots WHERE ST_Distance(coordinates, point) &lt; 5000; (5km)</text>
+
+  <text x="1800" y="2750" text-anchor="middle" class="legend" font-size="11" font-weight="bold">© 2024 SpotMap - Modelo E/R Profesional con 11 Entidades | 3NF Normalizado | PostGIS Habilitado</text>
+</svg>

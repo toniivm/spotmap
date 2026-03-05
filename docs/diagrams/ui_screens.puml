@@ -1,0 +1,260 @@
+@startuml UI_Screens_Diagram
+!define RECTANGLE class
+
+' Título
+title SpotMap - Diagrama de Pantallas (Screens)
+
+' Clase base para pantallas
+abstract class Screen {
+    # title: string
+    # components: Component[]
+    # layout: Layout
+    --
+    + render(): void
+    + mount(): void
+    + unmount(): void
+    + navigate(route): void
+}
+
+' Pantallas Principales
+package "Main Screens" <<Frame>> {
+    class MapScreen extends Screen {
+        - map: LeafletMap
+        - markers: Marker[]
+        - searchBar: SearchBar
+        - filterPanel: FilterPanel
+        - spotList: SpotList
+        - userPanel: UserPanel
+        - createButton: Button (floating)
+        --
+        + initializeMap(): void
+        + loadSpots(): void
+        + addMarker(spot): void
+        + filterSpots(criteria): void
+        + centerOnLocation(coords): void
+        + onMarkerClick(spot): void
+        --
+        Layout: 80% map, 20% sidebar
+        Mobile: full screen, collapsible sidebar
+    }
+
+    class SpotDetailScreen extends Screen {
+        - spot: Spot
+        - imageGallery: ImageGallery
+        - spotInfo: Card
+        - ratingDisplay: RatingStars
+        - commentSection: CommentThread
+        - favoriteButton: Button
+        - rateButton: Button
+        - reportButton: Button
+        --
+        + loadSpot(id): void
+        + showImages(): void
+        + loadComments(): void
+        + addToFavorites(): void
+        + submitRating(value): void
+        + reportSpot(): void
+        --
+        Layout: Vertical scroll
+        Sections: Gallery → Info → Comments
+    }
+
+    class CreateSpotScreen extends Screen {
+        - form: Form
+        - titleInput: Input
+        - descriptionInput: Input
+        - categorySelect: Select
+        - locationPicker: MapPicker
+        - imageUploader: ImageUploader
+        - tagsInput: TagsInput
+        - saveButton: Button
+        - cancelButton: Button
+        - previewButton: Button
+        --
+        + initializeForm(): void
+        + validateFields(): boolean
+        + uploadImages(): Promise
+        + saveSpot(): void
+        + showPreview(): void
+        + handleCancel(): void
+        --
+        Layout: Multi-step form
+        Validation: Real-time
+        Auto-save: Every 30s
+    }
+
+    class EditSpotScreen extends CreateSpotScreen {
+        - spotId: string
+        --
+        + loadExistingSpot(id): void
+        + updateSpot(): void
+        + deleteSpot(): void
+    }
+
+    class UserProfileScreen extends Screen {
+        - user: User
+        - avatarDisplay: Avatar
+        - statsCards: Card[]
+        - mySpotsList: SpotList
+        - favoritesList: SpotList
+        - settingsPanel: SettingsPanel
+        - logoutButton: Button
+        --
+        + loadUserData(): void
+        + showStatistics(): void
+        + loadUserSpots(): void
+        + loadFavorites(): void
+        + updateSettings(): void
+        + logout(): void
+        --
+        Layout: Grid (2 columns desktop)
+        Sections: Info, Stats, Content, Settings
+    }
+
+    class ModerationScreen extends Screen {
+        - reportsList: DataTable
+        - reportFilters: FilterPanel
+        - reportDetail: Card
+        - contentPreview: Modal
+        - actionButtons: Button[]
+        --
+        + loadReports(): void
+        + filterReports(criteria): void
+        + showReportDetail(id): void
+        + approveContent(): void
+        + hideContent(): void
+        + deleteContent(): void
+        + closeReport(): void
+        --
+        Layout: Split view
+        Left: Reports list, Right: Detail
+        Permissions: MODERATOR, ADMIN
+    }
+
+    class AdminDashboardScreen extends Screen {
+        - metricsCards: Card[]
+        - charts: Chart[]
+        - userTable: DataTable
+        - categoryManager: CategoryManager
+        - activityLog: LogViewer
+        - configPanel: ConfigPanel
+        --
+        + loadMetrics(): void
+        + renderCharts(): void
+        + manageUsers(): void
+        + manageCategories(): void
+        + viewLogs(): void
+        + updateConfig(): void
+        --
+        Layout: Dashboard grid
+        Sections: Metrics, Charts, Tables, Config
+        Permissions: ADMIN only
+    }
+}
+
+' Componentes Específicos de Pantallas
+package "Screen Components" <<Frame>> {
+    class LeafletMap {
+        - container: HTMLElement
+        - center: Coordinates
+        - zoom: number
+        - markers: Marker[]
+        --
+        + initialize(): void
+        + setView(coords, zoom): void
+        + addMarker(coords, options): Marker
+        + removeMarker(marker): void
+        + fitBounds(bounds): void
+    }
+
+    class SpotList {
+        - spots: Spot[]
+        - sortBy: string
+        - filterBy: Filter
+        --
+        + render(): HTMLElement
+        + loadSpots(spots): void
+        + sort(criteria): void
+        + filter(criteria): void
+        + onSpotClick(spot): void
+    }
+
+    class UserPanel {
+        - user: User
+        - avatar: Avatar
+        - menuItems: MenuItem[]
+        --
+        + render(): HTMLElement
+        + showMenu(): void
+        + navigate(route): void
+    }
+
+    class ImageUploader {
+        - files: File[]
+        - maxFiles: 10
+        - maxSize: 5MB
+        - preview: ImagePreview[]
+        --
+        + render(): HTMLElement
+        + addFiles(files): void
+        + removeFile(index): void
+        + compressImage(file): Promise<File>
+        + validate(): boolean
+    }
+
+    class DataTable {
+        - columns: Column[]
+        - rows: Row[]
+        - pagination: Pagination
+        - sortable: boolean
+        --
+        + render(): HTMLElement
+        + loadData(data): void
+        + sort(column): void
+        + paginate(): void
+    }
+
+    class Chart {
+        - type: "line" | "bar" | "pie" | "doughnut"
+        - data: ChartData
+        - options: ChartOptions
+        --
+        + render(): HTMLElement
+        + update(data): void
+        + export(): Image
+    }
+}
+
+' Navegación entre pantallas
+MapScreen --> SpotDetailScreen : "click marker"
+MapScreen --> CreateSpotScreen : "click create button"
+SpotDetailScreen --> EditSpotScreen : "edit spot (owner)"
+SpotDetailScreen --> UserProfileScreen : "click user"
+UserProfileScreen --> MapScreen : "navigate"
+ModerationScreen --> SpotDetailScreen : "review content"
+AdminDashboardScreen --> ModerationScreen : "manage reports"
+AdminDashboardScreen --> UserProfileScreen : "manage user"
+
+' Composición de componentes en pantallas
+MapScreen *-- LeafletMap
+MapScreen *-- SearchBar
+MapScreen *-- FilterPanel
+MapScreen *-- SpotList
+MapScreen *-- UserPanel
+
+SpotDetailScreen *-- ImageGallery
+SpotDetailScreen *-- RatingStars
+SpotDetailScreen *-- CommentThread
+
+CreateSpotScreen *-- ImageUploader
+EditSpotScreen *-- ImageUploader
+
+UserProfileScreen *-- SpotList
+
+ModerationScreen *-- DataTable
+ModerationScreen *-- FilterPanel
+
+AdminDashboardScreen *-- DataTable
+AdminDashboardScreen *-- Chart
+
+@enduml

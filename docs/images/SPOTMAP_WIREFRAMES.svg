@@ -1,0 +1,152 @@
+<svg width="3200" height="2600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3200 2600">
+  <defs>
+    <style type="text/css">
+      <![CDATA[
+        .title { font-size: 36px; font-weight: bold; fill: #1E3A8A; }
+        .screen-title { font-size: 16px; font-weight: bold; fill: white; }
+        .component-label { font-size: 12px; fill: #1F2937; font-weight: 500; }
+        .legend { font-size: 12px; fill: #4B5563; }
+        text { font-family: 'Segoe UI', Arial, sans-serif; }
+      ]]>
+    </style>
+  </defs>
+  
+  <rect width="3200" height="2600" fill="#FAFAFA"/>
+  
+  <!-- Header -->
+  <rect width="3200" height="80" fill="#F0F9FF" stroke="#0369A1" stroke-width="2"/>
+  <text x="1600" y="45" text-anchor="middle" class="title">WIREFRAMES - 6 Pantallas Principales</text>
+  <text x="1600" y="68" text-anchor="middle" class="legend" font-size="14">Mobile-First | Responsive | Flujos de Usuario</text>
+
+  <!-- Screen 1: Home/Map -->
+  <rect x="80" y="120" width="380" height="520" fill="#F3F4F6" stroke="#0369A1" stroke-width="2" rx="4"/>
+  <rect x="80" y="120" width="380" height="40" fill="#0369A1" rx="4"/>
+  <text x="270" y="150" text-anchor="middle" class="screen-title">Mapa</text>
+  <rect x="90" y="170" width="360" height="35" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="100" y="192" class="component-label">Buscar spots...</text>
+  <rect x="90" y="215" width="360" height="30" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="100" y="233" class="component-label">Filtros</text>
+  <rect x="90" y="255" width="360" height="250" fill="#E0F2FE" stroke="#94A3B8" stroke-width="1"/>
+  <text x="270" y="385" text-anchor="middle" class="component-label">Mapa con marcadores</text>
+  <circle cx="180" cy="290" r="5" fill="#10B981"/>
+  <circle cx="250" cy="320" r="5" fill="#F59E0B"/>
+  <circle cx="320" cy="305" r="5" fill="#DC2626"/>
+  <rect x="90" y="520" width="360" height="35" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="100" y="541" class="component-label">Home | Buscar | Crear | Perfil</text>
+
+  <!-- Screen 2: Spot Detail -->
+  <rect x="520" y="120" width="380" height="520" fill="#F3F4F6" stroke="#10B981" stroke-width="2" rx="4"/>
+  <rect x="520" y="120" width="380" height="40" fill="#10B981" rx="4"/>
+  <text x="710" y="150" text-anchor="middle" class="screen-title">Detalle</text>
+  <rect x="530" y="170" width="360" height="140" fill="#E0E7FF" stroke="#94A3B8" stroke-width="1"/>
+  <text x="710" y="245" text-anchor="middle" class="component-label">Galeria de imagenes</text>
+  <rect x="530" y="320" width="360" height="90" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="540" y="340" class="component-label">Titulo del Spot</text>
+  <text x="540" y="360" class="component-label" font-size="11">4.5/5 | 500m</text>
+  <text x="540" y="375" class="component-label" font-size="11">Por: Juan Perez</text>
+  <rect x="530" y="420" width="85" height="30" fill="#10B981" stroke="#10B981" stroke-width="1" rx="2"/>
+  <text x="572" y="440" text-anchor="middle" class="component-label" fill="white" font-size="11">Favorito</text>
+  <rect x="625" y="420" width="85" height="30" fill="#F59E0B" stroke="#F59E0B" stroke-width="1" rx="2"/>
+  <text x="667" y="440" text-anchor="middle" class="component-label" fill="white" font-size="11">Valorar</text>
+  <rect x="720" y="420" width="100" height="30" fill="#0369A1" stroke="#0369A1" stroke-width="1" rx="2"/>
+  <text x="770" y="440" text-anchor="middle" class="component-label" fill="white" font-size="11">Comentar</text>
+
+  <!-- Screen 3: Create Spot -->
+  <rect x="960" y="120" width="380" height="520" fill="#F3F4F6" stroke="#7C3AED" stroke-width="2" rx="4"/>
+  <rect x="960" y="120" width="380" height="40" fill="#7C3AED" rx="4"/>
+  <text x="1150" y="150" text-anchor="middle" class="screen-title">Crear</text>
+  <rect x="970" y="170" width="360" height="25" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1150" y="188" text-anchor="middle" class="component-label" font-size="10">Paso 1/3: Ubicacion</text>
+  <rect x="970" y="205" width="360" height="30" fill="white" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="980" y="225" class="component-label">Titulo del spot</text>
+  <rect x="970" y="245" width="360" height="30" fill="white" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="980" y="265" class="component-label">Categoria</text>
+  <rect x="970" y="285" width="360" height="60" fill="white" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="980" y="310" class="component-label">Descripcion...</text>
+  <rect x="970" y="355" width="170" height="30" fill="#E5E7EB" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="1055" y="375" text-anchor="middle" class="component-label">Anterior</text>
+  <rect x="1160" y="355" width="170" height="30" fill="#7C3AED" stroke="#7C3AED" stroke-width="1" rx="2"/>
+  <text x="1245" y="375" text-anchor="middle" class="component-label" fill="white">Siguiente</text>
+
+  <!-- Screen 4: User Profile -->
+  <rect x="1400" y="120" width="380" height="520" fill="#F3F4F6" stroke="#DC2626" stroke-width="2" rx="4"/>
+  <rect x="1400" y="120" width="380" height="40" fill="#DC2626" rx="4"/>
+  <text x="1590" y="150" text-anchor="middle" class="screen-title">Perfil</text>
+  <rect x="1410" y="170" width="360" height="65" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="1440" cy="200" r="20" fill="#DDD"/>
+  <text x="1470" y="195" class="component-label">Juan Perez</text>
+  <text x="1470" y="210" class="component-label" font-size="10">Madrid, Espana</text>
+  <rect x="1410" y="245" width="360" height="60" fill="#FEE2E2" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1440" y="262" class="component-label">Spots: 12</text>
+  <text x="1540" y="262" class="component-label">Comentarios: 45</text>
+  <text x="1440" y="283" class="component-label">Valoraciones: 28</text>
+  <text x="1540" y="283" class="component-label">Favoritos: 156</text>
+  <rect x="1410" y="315" width="360" height="30" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1420" y="334" class="component-label">Mis Spots</text>
+  <rect x="1410" y="355" width="360" height="30" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1420" y="374" class="component-label">Configuracion</text>
+
+  <!-- Screen 5: Moderation -->
+  <rect x="1840" y="120" width="380" height="520" fill="#F3F4F6" stroke="#F59E0B" stroke-width="2" rx="4"/>
+  <rect x="1840" y="120" width="380" height="40" fill="#F59E0B" rx="4"/>
+  <text x="2030" y="150" text-anchor="middle" class="screen-title">Moderacion</text>
+  <rect x="1850" y="170" width="170" height="30" fill="white" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="1935" y="190" text-anchor="middle" class="component-label" font-size="10">Reportes (7)</text>
+  <rect x="2030" y="170" width="170" height="30" fill="#F3F4F6" stroke="#E5E7EB" stroke-width="1" rx="2"/>
+  <text x="2115" y="190" text-anchor="middle" class="component-label" font-size="10">En Revision (3)</text>
+  <rect x="1850" y="210" width="360" height="55" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1860" y="228" class="component-label" font-size="11">Spot: "Lugar peligroso"</text>
+  <text x="1860" y="243" class="component-label" font-size="10">Por: 3 usuarios</text>
+  <rect x="1850" y="275" width="360" height="55" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="1860" y="293" class="component-label" font-size="11">Comentario: "Spam"</text>
+  <text x="1860" y="308" class="component-label" font-size="10">Por: 2 usuarios</text>
+  <rect x="1850" y="340" width="85" height="28" fill="#10B981" stroke="#10B981" stroke-width="1" rx="2"/>
+  <text x="1892" y="358" text-anchor="middle" class="component-label" fill="white" font-size="10">Aprobar</text>
+  <rect x="1950" y="340" width="85" height="28" fill="#DC2626" stroke="#DC2626" stroke-width="1" rx="2"/>
+  <text x="1992" y="358" text-anchor="middle" class="component-label" fill="white" font-size="10">Eliminar</text>
+  <rect x="2050" y="340" width="160" height="28" fill="#F59E0B" stroke="#F59E0B" stroke-width="1" rx="2"/>
+  <text x="2130" y="358" text-anchor="middle" class="component-label" fill="white" font-size="9">Suspender</text>
+
+  <!-- Screen 6: Admin Dashboard -->
+  <rect x="2280" y="120" width="380" height="520" fill="#F3F4F6" stroke="#1E40AF" stroke-width="2" rx="4"/>
+  <rect x="2280" y="120" width="380" height="40" fill="#1E40AF" rx="4"/>
+  <text x="2470" y="150" text-anchor="middle" class="screen-title">Admin</text>
+  <rect x="2290" y="170" width="170" height="50" fill="#E0F2FE" stroke="#0369A1" stroke-width="1" rx="2"/>
+  <text x="2325" y="188" class="component-label" font-size="10">Usuarios</text>
+  <text x="2325" y="208" class="component-label" font-weight="bold" font-size="12">1,234</text>
+  <rect x="2470" y="170" width="170" height="50" fill="#DCFCE7" stroke="#10B981" stroke-width="1" rx="2"/>
+  <text x="2505" y="188" class="component-label" font-size="10">Spots</text>
+  <text x="2505" y="208" class="component-label" font-weight="bold" font-size="12">5,678</text>
+  <rect x="2290" y="230" width="170" height="50" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" rx="2"/>
+  <text x="2325" y="248" class="component-label" font-size="10">Reportes</text>
+  <text x="2325" y="268" class="component-label" font-weight="bold" font-size="12">42</text>
+  <rect x="2470" y="230" width="170" height="50" fill="#FEE2E2" stroke="#DC2626" stroke-width="1" rx="2"/>
+  <text x="2505" y="248" class="component-label" font-size="10">Suspendidos</text>
+  <text x="2505" y="268" class="component-label" font-weight="bold" font-size="12">8</text>
+  <rect x="2290" y="290" width="360" height="100" fill="white" stroke="#E5E7EB" stroke-width="1"/>
+  <text x="2470" y="340" text-anchor="middle" class="component-label">Graficas de Actividad</text>
+  <polyline points="2310,320 2340,300 2370,310 2400,290 2430,305 2460,280 2490,295 2520,285 2550,300" fill="none" stroke="#10B981" stroke-width="2"/>
+
+  <!-- Footer -->
+  <rect y="1700" width="3200" height="900" fill="#F0F9FF" stroke="#0369A1" stroke-width="2"/>
+  <text x="100" y="1750" class="legend" font-weight="bold" font-size="14">WIREFRAMES - 6 Pantallas Principales:</text>
+  <text x="100" y="1790" class="legend" font-weight="bold" font-size="13">1. Pantalla Mapa (Home)</text>
+  <text x="100" y="1815" class="legend">Vista principal con mapa interactivo | Busqueda en tiempo real con filtros</text>
+  <text x="100" y="1835" class="legend">Filtrados por categoria y dificultad | Navegacion inferior (Bottom Tab Bar)</text>
+  <text x="100" y="1870" class="legend" font-weight="bold" font-size="13">2. Pantalla Detalle de Spot</text>
+  <text x="100" y="1895" class="legend">Galeria de imagenes con swipe/scroll | Informacion principal (Titulo, Valoracion, Distancia, Autor)</text>
+  <text x="100" y="1915" class="legend">Botones de accion: Favorito | Valorar | Comentar | Scroll de comentarios</text>
+  <text x="100" y="1950" class="legend" font-weight="bold" font-size="13">3. Pantalla Crear Spot (Multi-paso)</text>
+  <text x="100" y="1975" class="legend">Paso 1/3: Ubicacion (GPS/Mapa interactivo) | Paso 2/3: Detalles (Titulo, Categoria, Descripcion)</text>
+  <text x="100" y="1995" class="legend">Paso 3/3: Fotos (Upload multiple) | Navegacion Anterior/Siguiente | Guardado automatico</text>
+  <text x="100" y="2030" class="legend" font-weight="bold" font-size="13">4. Pantalla Perfil de Usuario</text>
+  <text x="100" y="2055" class="legend">Avatar + Nombre + Ubicacion | Estadisticas (Spots creados, Comentarios, Valoraciones, Favoritos)</text>
+  <text x="100" y="2075" class="legend">Mis Spots (galeria) | Configuracion (editar perfil, privacidad, notificaciones)</text>
+  <text x="100" y="2110" class="legend" font-weight="bold" font-size="13">5. Panel de Moderacion (Moderador)</text>
+  <text x="100" y="2135" class="legend">Tabs: Reportes (7) | En Revision (3) | Listado de reportes con detalles</text>
+  <text x="100" y="2155" class="legend">Acciones por reporte: Aprobar | Eliminar Contenido | Suspender Usuario</text>
+  <text x="100" y="2190" class="legend" font-weight="bold" font-size="13">6. Dashboard Administrativo (Admin)</text>
+  <text x="100" y="2215" class="legend">KPIs principales: Usuarios (1,234) | Spots (5,678) | Reportes (42) | Suspendidos (8)</text>
+  <text x="100" y="2235" class="legend">Graficas de actividad | Gestion de usuarios, categorias, configuraciones globales</text>
+  <text x="1600" y="2560" text-anchor="middle" class="legend" font-size="11" font-weight="bold">© 2024 SpotMap - Wireframes Profesionales | Mobile-First Design</text>
+</svg>

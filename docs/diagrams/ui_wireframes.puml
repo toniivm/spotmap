@@ -1,0 +1,309 @@
+@startuml UI_Wireframes_Structure
+!define RECTANGLE class
+
+' Título
+title SpotMap - Estructura de Wireframes y Layouts
+
+' Layout Base
+abstract class BaseLayout {
+    # header: Header
+    # main: MainContent
+    # footer: Footer
+    # responsive: ResponsiveConfig
+    --
+    + render(): HTMLElement
+    + applyBreakpoint(size): void
+}
+
+' Configuraciones de Layout
+class ResponsiveConfig {
+    + breakpoints: Breakpoint[]
+    + currentBreakpoint: string
+    --
+    XS: 0-575px (mobile)
+    SM: 576-767px (mobile landscape)
+    MD: 768-991px (tablet)
+    LG: 992-1199px (desktop)
+    XL: 1200px+ (large desktop)
+    --
+    + getBreakpoint(): string
+    + onResize(callback): void
+}
+
+' Wireframes de Pantallas Principales
+package "Screen Wireframes" <<Frame>> {
+    class MapScreenWireframe extends BaseLayout {
+        ==Estructura (Desktop)==
+        Header [100% × 60px]
+        ├─ Logo [left]
+        ├─ SearchBar [center, 50%]
+        └─ UserPanel [right]
+        
+        Main [100% × calc(100vh - 60px)]
+        ├─ FilterPanel [left, 250px]
+        ├─ Map [center, flex-grow]
+        │  └─ Markers (colored by category)
+        └─ SpotList [right, 300px, scroll]
+        
+        FloatingButton [bottom-right, 60px]
+        --
+        ==Estructura (Mobile)==
+        Header [100% × 60px]
+        Main [100% × full]
+        ├─ Map [100% × 100%]
+        ├─ SearchBar [overlay top]
+        └─ SpotList [overlay bottom, collapsible]
+        FloatingButton [bottom-right]
+        --
+        + showFilterPanel(): void
+        + hideFilterPanel(): void
+        + toggleSpotList(): void
+    }
+
+    class SpotDetailWireframe extends BaseLayout {
+        ==Estructura==
+        Header [100% × 60px]
+        ├─ BackButton [left]
+        └─ ShareButton [right]
+        
+        Main [scroll-y]
+        ├─ ImageGallery [100% × 400px]
+        │  ├─ MainImage
+        │  ├─ NavigationArrows
+        │  └─ Indicators
+        ├─ SpotInfoCard [100% × auto]
+        │  ├─ Title [h1, 32px]
+        │  ├─ Category Badge
+        │  ├─ Location [icon + text]
+        │  ├─ RatingStars [avg + count]
+        │  ├─ FavoriteButton
+        │  └─ Description [p, 16px]
+        ├─ ActionsBar [100% × 60px]
+        │  ├─ RateButton
+        │  └─ ReportButton
+        └─ CommentsSection [100% × auto]
+           ├─ CommentCount [h3]
+           └─ CommentThread [nested]
+        --
+        + loadGallery(): void
+        + showRatingModal(): void
+        + showReportModal(): void
+    }
+
+    class CreateSpotWireframe extends BaseLayout {
+        ==Estructura==
+        Header [100% × 60px]
+        ├─ BackButton
+        └─ PreviewButton
+        
+        Main [scroll-y, max-width: 800px, center]
+        ├─ ProgressBar [step 1/4]
+        └─ Form [grid, gap: 24px]
+           ├─ TitleInput [full-width]
+           │  └─ Label + Required*
+           ├─ DescriptionTextarea [full-width, 150px]
+           ├─ CategorySelect [half-width]
+           ├─ LocationPicker [full-width]
+           │  ├─ SearchAddress
+           │  └─ InteractiveMap [300px]
+           ├─ ImageUploader [full-width]
+           │  ├─ DropZone
+           │  ├─ PreviewGrid [4 cols]
+           │  └─ ProgressBars
+           ├─ TagsInput [full-width]
+           │  └─ Suggestions dropdown
+           └─ ActionsBar [full-width]
+              ├─ CancelButton [secondary]
+              └─ SaveButton [primary]
+        --
+        Validación en tiempo real
+        Auto-save cada 30s
+        Compresión automática de imágenes
+        --
+        + validateStep(): boolean
+        + saveAsDraft(): void
+        + submitSpot(): Promise
+    }
+
+    class UserProfileWireframe extends BaseLayout {
+        ==Estructura (Desktop)==
+        Header [100% × 60px]
+        
+        Main [grid, 2 cols, gap: 32px]
+        ├─ Sidebar [300px]
+        │  ├─ AvatarCard [center]
+        │  │  ├─ Avatar [150px]
+        │  │  ├─ Name [h2]
+        │  │  ├─ Email
+        │  │  └─ JoinDate
+        │  ├─ StatsCard [grid 2×2]
+        │  │  ├─ SpotsCount
+        │  │  ├─ RatingsCount
+        │  │  ├─ CommentsCount
+        │  │  └─ FavoritesCount
+        │  └─ SettingsPanel
+        │     ├─ ChangePassword
+        │     ├─ Privacy
+        │     ├─ Notifications
+        │     └─ LogoutButton
+        └─ ContentArea [flex-grow]
+           ├─ TabsBar [My Spots | Favorites]
+           └─ SpotGrid [3 cols, gap: 16px]
+              └─ SpotCards (editable)
+        --
+        ==Estructura (Mobile)==
+        Stack layout (vertical)
+        Tabs sticky at top
+        --
+        + switchTab(tab): void
+        + editSpot(id): void
+        + deleteSpot(id): void
+    }
+
+    class ModerationWireframe extends BaseLayout {
+        ==Estructura==
+        Header [100% × 60px]
+        ├─ Title: "Moderación"
+        └─ UserPanel
+        
+        Main [split-view, gap: 24px]
+        ├─ ReportsPanel [40%]
+        │  ├─ FilterBar [full-width]
+        │  │  ├─ StatusFilter
+        │  │  ├─ TypeFilter
+        │  │  └─ DateRange
+        │  └─ ReportsTable [scroll-y]
+        │     └─ Rows [clickable]
+        │        ├─ ReportId
+        │        ├─ Type (spot/comment)
+        │        ├─ Reason
+        │        ├─ Date
+        │        └─ Status badge
+        └─ DetailPanel [60%]
+           ├─ ReportInfo [card]
+           │  ├─ ReportedBy
+           │  ├─ ReportDate
+           │  ├─ Reason
+           │  └─ Description
+           ├─ ContentPreview [card]
+           │  ├─ Title
+           │  ├─ Images/Text
+           │  └─ Author
+           ├─ HistoryCard [card]
+           │  └─ PreviousActions
+           └─ ActionsBar [full-width]
+              ├─ ApproveButton [success]
+              ├─ HideButton [warning]
+              ├─ DeleteButton [danger]
+              └─ CloseButton [secondary]
+        --
+        Permisos: MODERATOR, ADMIN
+        --
+        + loadReports(): void
+        + reviewReport(id): void
+        + takeAction(action): Promise
+    }
+
+    class AdminDashboardWireframe extends BaseLayout {
+        ==Estructura==
+        Header [100% × 60px]
+        ├─ Title: "Panel Admin"
+        └─ UserPanel
+        
+        Main [grid, gap: 24px]
+        ├─ MetricsRow [grid 4 cols]
+        │  ├─ TotalUsersCard
+        │  ├─ TotalSpotsCard
+        │  ├─ ActiveReportsCard
+        │  └─ MonthlyActivityCard
+        ├─ ChartsRow [grid 2 cols]
+        │  ├─ SpotsByCategoryChart [pie]
+        │  └─ UserActivityChart [line]
+        ├─ ManagementRow [grid 2 cols]
+        │  ├─ UsersTable [card]
+        │  │  ├─ SearchBar
+        │  │  ├─ Table (paginated)
+        │  │  └─ Actions (suspend/restore)
+        │  └─ CategoriesManager [card]
+        │     ├─ CategoryList
+        │     ├─ CreateButton
+        │     └─ Edit/Delete actions
+        └─ LogsRow [full-width]
+           └─ ActivityLog [card]
+              ├─ FilterBar
+              └─ LogTable (scroll)
+        --
+        Permisos: ADMIN only
+        Auto-refresh cada 30s
+        --
+        + loadMetrics(): void
+        + loadCharts(): void
+        + exportData(): void
+    }
+}
+
+' Elementos Comunes
+package "Common Layout Elements" <<Frame>> {
+    class Header {
+        - height: 60px
+        - backgroundColor: #ffffff
+        - shadow: 0 2px 4px rgba(0,0,0,0.1)
+        --
+        + logo: Logo
+        + navigation: Navigation
+        + userPanel: UserPanel
+        --
+        + render(): HTMLElement
+    }
+
+    class MainContent {
+        - minHeight: calc(100vh - 60px)
+        - padding: 24px
+        - backgroundColor: #f3f4f6
+        --
+        + render(): HTMLElement
+        + setContent(content): void
+    }
+
+    class Footer {
+        - height: 80px
+        - backgroundColor: #1f2937
+        - color: #ffffff
+        --
+        + links: Link[]
+        + copyright: string
+        --
+        + render(): HTMLElement
+    }
+
+    class FloatingActionButton {
+        - position: fixed
+        - bottom: 24px
+        - right: 24px
+        - size: 60px
+        - backgroundColor: #10b981
+        - shadow: 0 4px 12px rgba(16,185,129,0.3)
+        --
+        + icon: Icon
+        + onClick: Function
+        --
+        + render(): HTMLElement
+        + show(): void
+        + hide(): void
+    }
+}
+
+' Relaciones
+MapScreenWireframe --|> BaseLayout
+SpotDetailWireframe --|> BaseLayout
+CreateSpotWireframe --|> BaseLayout
+UserProfileWireframe --|> BaseLayout
+ModerationWireframe --|> BaseLayout
+AdminDashboardWireframe --|> BaseLayout
+
+BaseLayout *-- Header
+BaseLayout *-- MainContent
+BaseLayout *-- Footer
+BaseLayout *-- ResponsiveConfig
+
+@enduml

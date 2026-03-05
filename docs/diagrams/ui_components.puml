@@ -1,0 +1,181 @@
+@startuml UI_Components_Diagram
+!define RECTANGLE class
+
+' Título
+title SpotMap - Diagrama de Componentes de UI
+
+' Sistema de Diseño Base
+package "Design System" <<Frame>> {
+    class ColorPalette {
+        + primary: #10b981
+        + secondary: #3b82f6
+        + accent: #f97316
+        + background: #ffffff
+        + backgroundSecondary: #f3f4f6
+        + textPrimary: #1f2937
+        + textSecondary: #6b7280
+        + error: #ef4444
+        + success: #22c55e
+        + warning: #eab308
+        --
+        + getCategoryColor(category): string
+    }
+
+    class Typography {
+        + fontFamily: "Inter, Roboto, -apple-system"
+        + h1: 32px/bold
+        + h2: 24px/bold
+        + h3: 18px/semi-bold
+        + body: 16px/regular
+        + small: 14px/regular
+        + tiny: 12px/regular
+        --
+        + getTextStyle(type): Style
+    }
+
+    class Spacing {
+        + padding: [8px, 16px, 24px, 32px]
+        + margin: [24px, 32px]
+        + gap: [8px, 12px, 16px]
+        --
+        + getSpacing(level): number
+    }
+}
+
+' Componentes Reutilizables
+package "Reusable Components" <<Frame>> {
+    abstract class Component {
+        # style: Style
+        # className: string
+        --
+        + render(): HTMLElement
+        + applyStyle(): void
+    }
+
+    class Button extends Component {
+        + type: "primary" | "secondary" | "danger"
+        + text: string
+        + disabled: boolean
+        + onClick: Function
+        --
+        - backgroundColor: string
+        - borderRadius: 6px
+        - padding: 12px
+        --
+        + render(): HTMLElement
+        + setDisabled(state): void
+    }
+
+    class Card extends Component {
+        + title: string
+        + content: HTMLElement
+        + shadow: boolean
+        --
+        - backgroundColor: #ffffff
+        - border: 1px solid #e5e7eb
+        - borderRadius: 8px
+        - padding: 16px
+        --
+        + render(): HTMLElement
+        + setContent(content): void
+    }
+
+    class Input extends Component {
+        + type: "text" | "email" | "password" | "number"
+        + placeholder: string
+        + value: string
+        + required: boolean
+        + onInput: Function
+        --
+        - border: 1px solid #d1d5db
+        - focusBorder: 2px solid #3b82f6
+        - borderRadius: 6px
+        - padding: 12px
+        --
+        + render(): HTMLElement
+        + getValue(): string
+        + setValue(value): void
+        + validate(): boolean
+    }
+
+    class Badge extends Component {
+        + text: string
+        + category: string
+        + color: string
+        --
+        - borderRadius: 12px
+        - padding: 4px 8px
+        --
+        + render(): HTMLElement
+        + setCategory(category): void
+    }
+
+    class ImageGallery extends Component {
+        + images: Image[]
+        + currentIndex: number
+        --
+        + render(): HTMLElement
+        + next(): void
+        + previous(): void
+        + goTo(index): void
+    }
+
+    class SearchBar extends Component {
+        + placeholder: string
+        + value: string
+        + onSearch: Function
+        + filters: Filter[]
+        --
+        + render(): HTMLElement
+        + search(query): void
+        + applyFilters(): void
+    }
+
+    class FilterPanel extends Component {
+        + categories: Category[]
+        + distance: number
+        + popularity: number
+        + onFilterChange: Function
+        --
+        + render(): HTMLElement
+        + getActiveFilters(): Filter[]
+        + reset(): void
+    }
+
+    class CommentThread extends Component {
+        + comments: Comment[]
+        + depth: number
+        --
+        + render(): HTMLElement
+        + addComment(comment): void
+        + addReply(parent, reply): void
+    }
+
+    class RatingStars extends Component {
+        + rating: number
+        + maxStars: 5
+        + interactive: boolean
+        + onChange: Function
+        --
+        + render(): HTMLElement
+        + setRating(value): void
+    }
+
+    class Modal extends Component {
+        + title: string
+        + content: HTMLElement
+        + isOpen: boolean
+        + onClose: Function
+        --
+        + render(): HTMLElement
+        + open(): void
+        + close(): void
+    }
+}
+
+' Relaciones de componentes con sistema de diseño
+Component ..> ColorPalette : uses
+Component ..> Typography : uses
+Component ..> Spacing : uses
+
+@enduml

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="3200" height="2400" xmlns="http://www.w3.org/2000/svg" style="background-color: #FAFAFA;">
+  <defs>
+    <style>
+      .title { font-size: 36px; font-weight: bold; fill: #1E3A8A; font-family: 'Segoe UI', Arial, sans-serif; }
+      .actor-name { font-size: 15px; font-weight: bold; fill: #1F2937; font-family: 'Segoe UI', Arial, sans-serif; }
+      .usecase-name { font-size: 13px; font-weight: bold; fill: #1F2937; font-family: 'Segoe UI', Arial, sans-serif; }
+      .legend { font-size: 12px; fill: #4B5563; font-family: 'Segoe UI', Arial, sans-serif; }
+      .rel-label { font-size: 11px; fill: #0369A1; font-weight: bold; font-family: 'Segoe UI', Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="3200" height="2400" fill="#FAFAFA"/>
+  
+  <!-- Header -->
+  <rect width="3200" height="80" fill="#F0F9FF" stroke="#10B981" stroke-width="2"/>
+  <text x="1600" y="45" text-anchor="middle" class="title">DIAGRAMA DE CASOS DE USO - SpotMap</text>
+  <text x="1600" y="68" text-anchor="middle" class="legend" font-size="14">4 Actores | 19 Casos de Uso | Sistema Completo de Funcionalidades</text>
+
+  <!-- System Boundary -->
+  <rect x="300" y="150" width="2600" height="1800" fill="none" stroke="#333" stroke-width="2" rx="8"/>
+  <text x="2650" y="165" class="legend" font-weight="bold">SpotMap System</text>
+
+  <!-- ACTORS - Left Side -->
+  <!-- Visitante -->
+  <circle cx="150" cy="400" r="40" fill="#DBEAFE" stroke="#0369A1" stroke-width="2"/>
+  <text x="150" y="455" text-anchor="middle" class="actor-name">👤 Visitante</text>
+
+  <!-- Usuario Registrado -->
+  <circle cx="150" cy="900" r="40" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="150" y="955" text-anchor="middle" class="actor-name">👤 Usuario</text>
+
+  <!-- Moderador -->
+  <circle cx="150" cy="1400" r="40" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <text x="150" y="1455" text-anchor="middle" class="actor-name">👮 Moderador</text>
+
+  <!-- Administrador -->
+  <circle cx="150" cy="1900" r="40" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+  <text x="150" y="1955" text-anchor="middle" class="actor-name">🔐 Admin</text>
+
+  <!-- USE CASES - Center -->
+  <!-- Authentication -->
+  <ellipse cx="700" cy="300" rx="120" ry="50" fill="#E0E7FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="700" y="310" text-anchor="middle" class="usecase-name">Registrarse</text>
+
+  <ellipse cx="700" cy="420" rx="120" ry="50" fill="#E0E7FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="700" y="430" text-anchor="middle" class="usecase-name">Iniciar Sesión</text>
+
+  <ellipse cx="700" cy="540" rx="120" ry="50" fill="#E0E7FF" stroke="#4F46E5" stroke-width="2"/>
+  <text x="700" y="550" text-anchor="middle" class="usecase-name">Recuperar Contraseña</text>
+
+  <!-- Exploration & Search -->
+  <ellipse cx="1100" cy="280" rx="120" ry="50" fill="#DBEAFE" stroke="#0369A1" stroke-width="2"/>
+  <text x="1100" y="280" text-anchor="middle" class="usecase-name">Ver Mapa</text>
+  <text x="1100" y="300" text-anchor="middle" class="usecase-name">Interactivo</text>
+
+  <ellipse cx="1100" cy="400" rx="120" ry="50" fill="#DBEAFE" stroke="#0369A1" stroke-width="2"/>
+  <text x="1100" y="410" text-anchor="middle" class="usecase-name">Buscar Spots</text>
+
+  <ellipse cx="1100" cy="520" rx="120" ry="50" fill="#DBEAFE" stroke="#0369A1" stroke-width="2"/>
+  <text x="1100" y="520" text-anchor="middle" class="usecase-name">Filtrar por</text>
+  <text x="1100" y="540" text-anchor="middle" class="usecase-name">Categoría</text>
+
+  <ellipse cx="1100" cy="660" rx="120" ry="50" fill="#DBEAFE" stroke="#0369A1" stroke-width="2"/>
+  <text x="1100" y="670" text-anchor="middle" class="usecase-name">Ver Detalles</text>
+
+  <!-- User Interactions -->
+  <ellipse cx="1500" cy="280" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="290" text-anchor="middle" class="usecase-name">Crear Spot</text>
+
+  <ellipse cx="1500" cy="400" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="410" text-anchor="middle" class="usecase-name">Subir Imágenes</text>
+
+  <ellipse cx="1500" cy="520" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="530" text-anchor="middle" class="usecase-name">Comentar</text>
+
+  <ellipse cx="1500" cy="640" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="645" text-anchor="middle" class="usecase-name">Valorar</text>
+  <text x="1500" y="665" text-anchor="middle" class="usecase-name">(Rating 1-5)</text>
+
+  <ellipse cx="1500" cy="770" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="780" text-anchor="middle" class="usecase-name">Guardar</text>
+  <text x="1500" y="800" text-anchor="middle" class="usecase-name">Favorito</text>
+
+  <ellipse cx="1500" cy="900" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="910" text-anchor="middle" class="usecase-name">Ver Perfil</text>
+
+  <ellipse cx="1500" cy="1020" rx="120" ry="50" fill="#DCFCE7" stroke="#10B981" stroke-width="2"/>
+  <text x="1500" y="1030" text-anchor="middle" class="usecase-name">Reportar Spot</text>
+
+  <!-- Moderation -->
+  <ellipse cx="1900" cy="520" rx="120" ry="50" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1900" y="525" text-anchor="middle" class="usecase-name">Revisar</text>
+  <text x="1900" y="545" text-anchor="middle" class="usecase-name">Reportes</text>
+
+  <ellipse cx="1900" cy="640" rx="120" ry="50" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1900" y="645" text-anchor="middle" class="usecase-name">Eliminar</text>
+  <text x="1900" y="665" text-anchor="middle" class="usecase-name">Contenido</text>
+
+  <ellipse cx="1900" cy="760" rx="120" ry="50" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+  <text x="1900" y="770" text-anchor="middle" class="usecase-name">Suspender</text>
+  <text x="1900" y="790" text-anchor="middle" class="usecase-name">Usuario</text>
+
+  <!-- Administration -->
+  <ellipse cx="2300" cy="400" rx="120" ry="50" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+  <text x="2300" y="405" text-anchor="middle" class="usecase-name">Gestionar</text>
+  <text x="2300" y="425" text-anchor="middle" class="usecase-name">Usuarios</text>
+
+  <ellipse cx="2300" cy="520" rx="120" ry="50" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+  <text x="2300" y="530" text-anchor="middle" class="usecase-name">Gestionar</text>
+  <text x="2300" y="550" text-anchor="middle" class="usecase-name">Categorías</text>
+
+  <ellipse cx="2300" cy="640" rx="120" ry="50" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+  <text x="2300" y="645" text-anchor="middle" class="usecase-name">Ver</text>
+  <text x="2300" y="665" text-anchor="middle" class="usecase-name">Estadísticas</text>
+
+  <ellipse cx="2300" cy="760" rx="120" ry="50" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+  <text x="2300" y="770" text-anchor="middle" class="usecase-name">Configurar</text>
+  <text x="2300" y="790" text-anchor="middle" class="usecase-name">Sistema</text>
+
+  <!-- Associations -->
+  <!-- Visitante -->
+  <line x1="190" y1="400" x2="580" y2="300" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="400" x2="580" y2="420" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="400" x2="580" y2="540" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="350" x2="980" y2="280" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="380" x2="980" y2="400" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="420" x2="980" y2="520" stroke="#0369A1" stroke-width="2"/>
+  <line x1="190" y1="450" x2="980" y2="660" stroke="#0369A1" stroke-width="2"/>
+
+  <!-- Usuario -->
+  <line x1="190" y1="900" x2="1380" y2="300" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="900" x2="1380" y2="420" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="900" x2="1380" y2="520" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="930" x2="1380" y2="640" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="960" x2="1380" y2="770" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="900" x2="1380" y2="900" stroke="#10B981" stroke-width="2"/>
+  <line x1="190" y1="880" x2="1380" y2="1020" stroke="#10B981" stroke-width="2"/>
+
+  <!-- Moderador -->
+  <line x1="190" y1="1400" x2="1780" y2="520" stroke="#F59E0B" stroke-width="2"/>
+  <line x1="190" y1="1400" x2="1780" y2="640" stroke="#F59E0B" stroke-width="2"/>
+  <line x1="190" y1="1400" x2="1780" y2="760" stroke="#F59E0B" stroke-width="2"/>
+
+  <!-- Admin -->
+  <line x1="190" y1="1900" x2="2180" y2="400" stroke="#DC2626" stroke-width="2"/>
+  <line x1="190" y1="1900" x2="2180" y2="520" stroke="#DC2626" stroke-width="2"/>
+  <line x1="190" y1="1900" x2="2180" y2="640" stroke="#DC2626" stroke-width="2"/>
+  <line x1="190" y1="1900" x2="2180" y2="760" stroke="#DC2626" stroke-width="2"/>
+
+  <!-- Include relationships -->
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#666"/>
+    </marker>
+  </defs>
+
+  <!-- Buscar incluye Filtrar -->
+  <line x1="1100" y1="450" x2="1100" y2="470" stroke="#666" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="1150" y="465" class="rel-label" font-size="10">«include»</text>
+
+  <!-- Footer -->
+  <rect y="2000" width="3200" height="400" fill="#F0F9FF" stroke="#10B981" stroke-width="2"/>
+  <text x="100" y="2050" class="legend" font-weight="bold" font-size="14">Descripción de Actores y Permisos:</text>
+  <text x="100" y="2080" class="legend">👤 VISITANTE: Acceso público - Ver mapa, buscar spots, ver detalles (sin autenticación)</text>
+  <text x="100" y="2110" class="legend">👤 USUARIO: Cliente registrado - Crear spots, comentar, valorar, guardar favoritos, reportar</text>
+  <text x="100" y="2140" class="legend">👮 MODERADOR: Rol especial - Revisar reportes, eliminar contenido inapropiado, suspender usuarios</text>
+  <text x="100" y="2170" class="legend">🔐 ADMINISTRADOR: Control total - Gestionar usuarios, categorías, ver estadísticas, configurar sistema</text>
+  <text x="100" y="2200" class="legend">Funcionalidades Principales: Autenticación | Exploración | Creación de Contenido | Interacción | Moderación | Administración</text>
+  <text x="1600" y="2350" class="legend" text-anchor="middle" font-size="11">© 2024 SpotMap - Casos de Uso del Sistema</text>
+</svg>

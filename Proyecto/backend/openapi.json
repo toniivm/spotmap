@@ -1,0 +1,1028 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SpotMap API",
+    "description": "API REST para plataforma social de escalada - Gestión de spots, comentarios, valoraciones y favoritos",
+    "version": "1.0.0",
+    "contact": {
+      "name": "SpotMap Team",
+      "url": "https://github.com/antonio-valero/spotmap"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost/https-github.com-antonio-valero-daw2personal/Proyecto/spotMap/backend/public",
+      "description": "Desarrollo local (XAMPP)"
+    },
+    {
+      "url": "https://api.spotmap.com",
+      "description": "Producción"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Spots",
+      "description": "Gestión de spots de escalada"
+    },
+    {
+      "name": "Auth",
+      "description": "Autenticación y autorización"
+    },
+    {
+      "name": "Comments",
+      "description": "Comentarios en spots"
+    },
+    {
+      "name": "Ratings",
+      "description": "Valoraciones de spots"
+    },
+    {
+      "name": "Favorites",
+      "description": "Spots favoritos de usuarios"
+    },
+    {
+      "name": "Admin",
+      "description": "Endpoints de administración"
+    },
+    {
+      "name": "Notifications",
+      "description": "Notificaciones de usuario"
+    },
+    {
+      "name": "System",
+      "description": "Estado y salud de la API"
+    }
+  ],
+  "paths": {
+    "/spots": {
+      "get": {
+        "tags": ["Spots"],
+        "summary": "Listar todos los spots",
+        "description": "Obtiene una lista paginada de spots con filtros opcionales",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Número de página",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Spots por página",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filtrar por categoría",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "query",
+            "description": "Filtrar por etiqueta",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "min_rating",
+            "in": "query",
+            "description": "Valoración mínima",
+            "schema": {
+              "type": "number",
+              "format": "float",
+              "minimum": 1,
+              "maximum": 5
+            }
+          },
+          {
+            "name": "center_lat",
+            "in": "query",
+            "description": "Latitud para búsqueda geográfica",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "center_lng",
+            "in": "query",
+            "description": "Longitud para búsqueda geográfica",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "max_distance_km",
+            "in": "query",
+            "description": "Radio máximo en kilómetros",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de spots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Spots"],
+        "summary": "Crear nuevo spot",
+        "description": "Crea un nuevo spot de escalada (requiere autenticación)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpotCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Spot creado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationError"
+          }
+        }
+      }
+    },
+    "/spots/{id}": {
+      "get": {
+        "tags": ["Spots"],
+        "summary": "Obtener spot por ID",
+        "description": "Devuelve los detalles de un spot específico",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID del spot",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles del spot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpotDetail"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Spots"],
+        "summary": "Eliminar spot",
+        "description": "Elimina un spot (solo propietario o admin)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spot eliminado"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/spots/{id}/comments": {
+      "get": {
+        "tags": ["Comments"],
+        "summary": "Listar comentarios de un spot",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de comentarios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Comments"],
+        "summary": "Crear comentario",
+        "description": "Añade un comentario a un spot (requiere autenticación)",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommentCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comentario creado"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/spots/{id}/ratings": {
+      "post": {
+        "tags": ["Ratings"],
+        "summary": "Valorar spot",
+        "description": "Crea o actualiza la valoración de un spot",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RatingCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Valoración guardada"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/favorites": {
+      "get": {
+        "tags": ["Favorites"],
+        "summary": "Listar favoritos del usuario",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de spots favoritos"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Favorites"],
+        "summary": "Añadir a favoritos",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "spot_id": {
+                    "type": "integer"
+                  }
+                },
+                "required": ["spot_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Añadido a favoritos"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/admin/pending": {
+      "get": {
+        "tags": ["Admin"],
+        "summary": "Listar spots pendientes de moderación",
+        "description": "Solo para moderadores y administradores",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de spots pendientes"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          }
+        }
+      }
+    },
+    "/admin/spots/{id}/approve": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Aprobar spot pendiente",
+        "description": "Solo moderadores/admin. Cambia status a approved y notifica al creador.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spot aprobado"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/admin/spots/{id}/reject": {
+      "post": {
+        "tags": ["Admin"],
+        "summary": "Rechazar spot pendiente",
+        "description": "Solo moderadores/admin. Cambia status a rejected y notifica al creador.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Spot rechazado"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Listar notificaciones del usuario",
+        "description": "Devuelve notificaciones paginadas del usuario autenticado.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "minimum": 1,
+              "maximum": 50
+            }
+          },
+          {
+            "name": "unread_only",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de notificaciones"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/notifications/unread-count": {
+      "get": {
+        "tags": ["Notifications"],
+        "summary": "Contador de no leídas",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cantidad de notificaciones no leídas"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "tags": ["Notifications"],
+        "summary": "Marcar notificación como leída",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notificación marcada como leída"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/notifications/mark-all-read": {
+      "post": {
+        "tags": ["Notifications"],
+        "summary": "Marcar todas como leídas",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notificaciones actualizadas"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/notifications/{id}": {
+      "delete": {
+        "tags": ["Notifications"],
+        "summary": "Eliminar notificación",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Notificación eliminada"
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Health check de la API",
+        "description": "Estado general de API, base de datos y entorno.",
+        "responses": {
+          "200": {
+            "description": "API saludable"
+          },
+          "503": {
+            "description": "API degradada"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token de Supabase Auth"
+      }
+    },
+    "schemas": {
+      "Spot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "example": "El Chorro - Sector Frontales"
+          },
+          "description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "example": 36.9287
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "example": -4.7684
+          },
+          "category_id": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "approved", "rejected"],
+            "default": "pending"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "avg_rating": {
+            "type": "number",
+            "format": "float",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "SpotCreate": {
+        "type": "object",
+        "required": ["title", "latitude", "longitude"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 200
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "latitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -90,
+            "maximum": 90
+          },
+          "longitude": {
+            "type": "number",
+            "format": "double",
+            "minimum": -180,
+            "maximum": 180
+          },
+          "category_id": {
+            "type": "integer"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SpotDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Spot"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "comments_count": {
+                "type": "integer"
+              },
+              "favorites_count": {
+                "type": "integer"
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "SpotsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "spots": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Spot"
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "SpotResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "$ref": "#/components/schemas/SpotDetail"
+          }
+        }
+      },
+      "CommentCreate": {
+        "type": "object",
+        "required": ["body"],
+        "properties": {
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        }
+      },
+      "CommentsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "user_id": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RatingCreate": {
+        "type": "object",
+        "required": ["score"],
+        "properties": {
+          "score": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "ErrorResponse": {
+        "description": "Error del servidor",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "No autorizado - Token faltante o inválido",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": 401,
+                "message": "Missing or invalid authentication token"
+              }
+            }
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Prohibido - Sin permisos",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": 403,
+                "message": "Insufficient permissions"
+              }
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Recurso no encontrado",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "success": false,
+              "error": {
+                "code": 404,
+                "message": "Resource not found"
+              }
+            }
+          }
+        }
+      },
+      "ValidationError": {
+        "description": "Error de validación",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": false
+                },
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer",
+                      "example": 422
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Validation failed"
+                    },
+                    "errors": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

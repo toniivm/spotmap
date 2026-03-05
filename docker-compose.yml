@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  # SpotMap Application Container
+  spotmap:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.2
+    container_name: spotmap-app
+    restart: unless-stopped
+    hostname: spotmap
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DEBUG=${DEBUG:-false}
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-spotmap}
+      - DB_USERNAME=${DB_USERNAME:-spotmap}
+      - DB_PASSWORD=${DB_PASSWORD:-spotmap123}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ADMIN_API_TOKEN=${ADMIN_API_TOKEN:-dev_token_change_in_prod}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TZ=Europe/Madrid
+    volumes:
+      - ./backend:/app
+      - ./frontend:/app/public/frontend
+      - spotmap-logs:/app/logs
+      - spotmap-uploads:/app/public/uploads
+      - .env.docker:/app/.env:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - spotmap-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0-alpine
+    container_name: spotmap-mysql
+    restart: unless-stopped
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root123}
+      - MYSQL_DATABASE=${DB_DATABASE:-spotmap}
+      - MYSQL_USER=${DB_USERNAME:-spotmap}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-spotmap123}
+      - TZ=Europe/Madrid
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - spotmap-mysql:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    networks:
+      - spotmap-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: spotmap-redis
+    restart: unless-stopped
+    hostname: redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - spotmap-redis:/data
+    networks:
+      - spotmap-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # PostgreSQL (Optional - for Supabase compatibility)
+  postgres:
+    image: postgres:15-alpine
+    container_name: spotmap-postgres
+    restart: unless-stopped
+    hostname: postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-spotmap}
+      - POSTGRES_USER=${POSTGRES_USER:-spotmap}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-spotmap123}
+      - TZ=Europe/Madrid
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - spotmap-postgres:/var/lib/postgresql/data
+      - ./init-db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    networks:
+      - spotmap-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spotmap"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - postgres
+
+volumes:
+  spotmap-logs:
+    driver: local
+  spotmap-uploads:
+    driver: local
+  spotmap-mysql:
+    driver: local
+  spotmap-redis:
+    driver: local
+  spotmap-postgres:
+    driver: local
+
+networks:
+  spotmap-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# Usage:
+# Development with MySQL: docker-compose up -d
+# With PostgreSQL: docker-compose --profile postgres up -d
+# Stop all: docker-compose down
+# Remove volumes: docker-compose down -v
+

@@ -1,0 +1,46 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam shadowing false
+skinparam backgroundColor #ffffff
+skinparam defaultFontName "Segoe UI"
+
+actor Visitante as V
+actor "Usuario Registrado" as U
+actor Moderador as M
+actor Administrador as A
+
+rectangle SpotMap {
+  usecase "Explorar mapa" as UC_Map
+  usecase "Ver detalle de spot" as UC_Detail
+  usecase "Crear/Editar spot" as UC_Create
+  usecase "Gestionar perfil" as UC_Profile
+  usecase "Gestionar favoritos" as UC_Favs
+  usecase "Notificaciones" as UC_Notif
+  usecase "Reportar contenido" as UC_Report
+  usecase "Revisar reportes" as UC_Mod
+  usecase "Gestión de usuarios" as UC_AdminUsers
+  usecase "Gestión de contenido" as UC_AdminContent
+  usecase "Métricas y logs" as UC_Metrics
+}
+
+V --> UC_Map
+V --> UC_Detail
+V --> UC_Report : solo login
+
+U --> UC_Map
+U --> UC_Detail
+U --> UC_Create
+U --> UC_Profile
+U --> UC_Favs
+U --> UC_Notif
+U --> UC_Report
+
+M --> UC_Mod
+M --> UC_Metrics
+
+A --> UC_AdminUsers
+A --> UC_AdminContent
+A --> UC_Metrics
+
+@enduml

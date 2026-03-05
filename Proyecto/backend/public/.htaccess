@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# CRÍTICO: Pasar header Authorization a PHP (Apache NO lo hace por defecto)
+RewriteCond %{HTTP:Authorization} ^(.+)$
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+# Routing: Redirigir solicitudes a api.php (si no existe el archivo físico)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ api.php?request=$1 [QSA,L]

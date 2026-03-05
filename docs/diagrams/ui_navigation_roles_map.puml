@@ -1,0 +1,16 @@
+@startmindmap
+* SpotMap Navigation
+** Visitante / No Registrado
+*** Inicio (Mapa): explorar spots, ver detalle, comentarios
+*** Login / Registro: registro, login, recuperar contraseña
+*** Información: sobre SpotMap, términos, privacidad
+** Usuario Registrado
+*** Inicio (Mapa): explorar, crear spot (formulario + vista previa)
+*** Mi perfil: info personal, spots (editar/eliminar), favoritos, comentarios, configuración
+*** Notificaciones: ver y marcar como leídas
+*** Logout
+** Moderador
+*** Panel de Moderación: reportes pendientes (aprobar/ocultar/eliminar), contenido oculto, estadísticas
+** Administrador
+*** Panel de Administración: dashboard, usuarios, contenido, reportes, config, logs
+@endmindmap

@@ -1,0 +1,501 @@
+@startuml UI_Navigation_Map
+!define RECTANGLE class
+
+' Título
+title SpotMap - Mapa de Navegación y Estructura del Sitio
+
+' Página base
+abstract class Page {
+    # url: string
+    # title: string
+    # requiredRole: Role
+    # breadcrumb: string[]
+    --
+    + render(): void
+    + checkPermissions(): boolean
+    + navigate(route): void
+}
+
+' Enumeración de roles
+enum UserRole {
+    VISITOR
+    REGISTERED
+    MODERATOR
+    ADMIN
+}
+
+' Estructura para Visitantes
+package "Visitor Navigation" <<Frame>> {
+    class HomePage extends Page {
+        + url: "/"
+        + title: "Inicio - SpotMap"
+        + requiredRole: VISITOR
+        --
+        + showMap(): void
+        + showPublicSpots(): void
+        + redirectToLogin(): void
+    }
+
+    class ExploreSpots extends Page {
+        + url: "/explore"
+        + title: "Explorar Spots"
+        + requiredRole: VISITOR
+        --
+        + filterByCategory(category): void
+        + searchByText(query): void
+        + viewSpotDetail(id): void
+    }
+
+    class SpotDetailPublic extends Page {
+        + url: "/spots/:id"
+        + title: "Detalle del Spot"
+        + requiredRole: VISITOR
+        --
+        + loadSpot(id): void
+        + viewComments(): void
+        + showLoginPrompt(): void
+        --
+        Note: Reportar requiere login
+    }
+
+    class LoginPage extends Page {
+        + url: "/login"
+        + title: "Iniciar Sesión"
+        + requiredRole: VISITOR
+        --
+        + showLoginForm(): void
+        + redirectToRegister(): void
+        + redirectToRecovery(): void
+    }
+
+    class RegisterPage extends Page {
+        + url: "/register"
+        + title: "Registro"
+        + requiredRole: VISITOR
+        --
+        + showRegisterForm(): void
+        + validateEmail(): boolean
+        + createAccount(): Promise
+    }
+
+    class PasswordRecovery extends Page {
+        + url: "/recovery"
+        + title: "Recuperar Contraseña"
+        + requiredRole: VISITOR
+        --
+        + sendRecoveryEmail(): Promise
+        + resetPassword(): Promise
+    }
+
+    class AboutPage extends Page {
+        + url: "/about"
+        + title: "Sobre SpotMap"
+        + requiredRole: VISITOR
+        --
+        + showInfo(): void
+        + showTeam(): void
+    }
+
+    class TermsPage extends Page {
+        + url: "/terms"
+        + title: "Términos y Condiciones"
+        + requiredRole: VISITOR
+    }
+
+    class PrivacyPage extends Page {
+        + url: "/privacy"
+        + title: "Política de Privacidad"
+        + requiredRole: VISITOR
+    }
+}
+
+' Navegación de Visitantes
+HomePage --> ExploreSpots : "explorar spots"
+HomePage --> LoginPage : "login/registro"
+HomePage --> AboutPage : "información"
+
+ExploreSpots --> SpotDetailPublic : "ver detalle"
+SpotDetailPublic --> LoginPage : "reportar (requiere login)"
+
+LoginPage --> RegisterPage : "crear cuenta"
+LoginPage --> PasswordRecovery : "olvidé contraseña"
+RegisterPage --> LoginPage : "ya tengo cuenta"
+
+HomePage --> TermsPage : "footer link"
+HomePage --> PrivacyPage : "footer link"
+
+' Estructura para Usuarios Registrados
+package "Registered User Navigation" <<Frame>> {
+    class DashboardUser extends Page {
+        + url: "/dashboard"
+        + title: "Mi Dashboard"
+        + requiredRole: REGISTERED
+        --
+        + showMySpots(): void
+        + showFavorites(): void
+        + showNotifications(): void
+    }
+
+    class CreateSpotPage extends Page {
+        + url: "/spots/create"
+        + title: "Crear Spot"
+        + requiredRole: REGISTERED
+        --
+        + showForm(): void
+        + validateForm(): boolean
+        + uploadImages(): Promise
+        + submitSpot(): Promise
+        + showPreview(): void
+    }
+
+    class EditSpotPage extends Page {
+        + url: "/spots/:id/edit"
+        + title: "Editar Spot"
+        + requiredRole: REGISTERED (owner)
+        --
+        + loadSpot(id): void
+        + updateSpot(): Promise
+        + deleteSpot(): Promise
+    }
+
+    class SpotDetailAuth extends Page {
+        + url: "/spots/:id"
+        + title: "Detalle del Spot"
+        + requiredRole: REGISTERED
+        --
+        + addToFavorites(): void
+        + rateSpot(rating): void
+        + addComment(text): void
+        + reportSpot(): void
+        + shareSpot(): void
+    }
+
+    class UserProfilePage extends Page {
+        + url: "/profile"
+        + title: "Mi Perfil"
+        + requiredRole: REGISTERED
+        --
+        Tabs:
+        + personalInfo: PersonalInfoTab
+        + mySpots: MySpotsTab
+        + favorites: FavoritesTab
+        + comments: MyCommentsTab
+        + settings: SettingsTab
+    }
+
+    class PersonalInfoTab {
+        + avatar: Image
+        + name: string
+        + email: string
+        + joinDate: Date
+        + statistics: Stats
+        --
+        + updateAvatar(): void
+        + updateInfo(): void
+    }
+
+    class MySpotsTab {
+        + spots: Spot[]
+        --
+        + listMySpots(): void
+        + editSpot(id): void
+        + deleteSpot(id): void
+        + viewStats(id): void
+    }
+
+    class FavoritesTab {
+        + favorites: Spot[]
+        --
+        + listFavorites(): void
+        + removeFromFavorites(id): void
+        + navigateToSpot(id): void
+    }
+
+    class MyCommentsTab {
+        + comments: Comment[]
+        --
+        + listMyComments(): void
+        + editComment(id): void
+        + deleteComment(id): void
+    }
+
+    class SettingsTab {
+        + changePassword(): void
+        + updatePrivacy(): void
+        + manageNotifications(): void
+        + deleteAccount(): void
+        + logout(): void
+    }
+
+    class NotificationsPage extends Page {
+        + url: "/notifications"
+        + title: "Notificaciones"
+        + requiredRole: REGISTERED
+        --
+        + listNotifications(): void
+        + markAsRead(id): void
+        + markAllAsRead(): void
+        + deleteNotification(id): void
+    }
+}
+
+' Navegación de Usuarios Registrados
+DashboardUser --> CreateSpotPage : "crear spot"
+DashboardUser --> UserProfilePage : "mi perfil"
+DashboardUser --> NotificationsPage : "notificaciones"
+DashboardUser --> SpotDetailAuth : "ver spot"
+
+SpotDetailAuth --> EditSpotPage : "editar (si es propietario)"
+SpotDetailAuth --> UserProfilePage : "ver autor"
+
+CreateSpotPage --> SpotDetailAuth : "después de crear"
+EditSpotPage --> SpotDetailAuth : "después de editar"
+
+UserProfilePage *-- PersonalInfoTab
+UserProfilePage *-- MySpotsTab
+UserProfilePage *-- FavoritesTab
+UserProfilePage *-- MyCommentsTab
+UserProfilePage *-- SettingsTab
+
+MySpotsTab --> EditSpotPage : "editar spot"
+FavoritesTab --> SpotDetailAuth : "ver favorito"
+
+' Estructura para Moderadores
+package "Moderator Navigation" <<Frame>> {
+    class ModerationPanel extends Page {
+        + url: "/moderation"
+        + title: "Panel de Moderación"
+        + requiredRole: MODERATOR
+        --
+        + showPendingReports(): void
+        + filterReports(criteria): void
+        + viewReportDetail(id): void
+    }
+
+    class PendingReports extends Page {
+        + url: "/moderation/pending"
+        + title: "Reportes Pendientes"
+        + requiredRole: MODERATOR
+        --
+        + listPendingReports(): void
+        + filterByType(type): void
+        + filterByDate(range): void
+        + sortBy(field): void
+    }
+
+    class ReportDetail extends Page {
+        + url: "/moderation/reports/:id"
+        + title: "Detalle del Reporte"
+        + requiredRole: MODERATOR
+        --
+        + loadReport(id): void
+        + viewContent(): void
+        + approveContent(): Promise
+        + hideContent(): Promise
+        + deleteContent(): Promise
+        + closeReport(reason): Promise
+    }
+
+    class HiddenContent extends Page {
+        + url: "/moderation/hidden"
+        + title: "Contenido Oculto"
+        + requiredRole: MODERATOR
+        --
+        + listHiddenSpots(): void
+        + listHiddenComments(): void
+        + restoreContent(id): void
+        + viewHistory(): void
+    }
+
+    class ModerationStats extends Page {
+        + url: "/moderation/stats"
+        + title: "Estadísticas de Moderación"
+        + requiredRole: MODERATOR
+        --
+        + showReportsChart(): void
+        + showDeletedContent(): void
+        + showReportedUsers(): void
+        + exportReport(): void
+    }
+
+    class DecisionHistory extends Page {
+        + url: "/moderation/history"
+        + title: "Historial de Decisiones"
+        + requiredRole: MODERATOR
+        --
+        + listDecisions(): void
+        + filterByModerator(): void
+        + filterByDate(): void
+        + viewDetails(id): void
+    }
+}
+
+' Navegación de Moderadores
+ModerationPanel --> PendingReports : "ver pendientes"
+ModerationPanel --> HiddenContent : "contenido oculto"
+ModerationPanel --> ModerationStats : "estadísticas"
+ModerationPanel --> DecisionHistory : "historial"
+
+PendingReports --> ReportDetail : "revisar reporte"
+ReportDetail --> PendingReports : "después de acción"
+ReportDetail --> SpotDetailAuth : "ver contenido completo"
+
+HiddenContent --> ReportDetail : "ver detalles"
+DecisionHistory --> ReportDetail : "ver decisión"
+
+' Estructura para Administradores
+package "Admin Navigation" <<Frame>> {
+    class AdminPanel extends Page {
+        + url: "/admin"
+        + title: "Panel de Administración"
+        + requiredRole: ADMIN
+        --
+        + showDashboard(): void
+        + quickAccess(): void
+    }
+
+    class AdminDashboard extends Page {
+        + url: "/admin/dashboard"
+        + title: "Dashboard Administrativo"
+        + requiredRole: ADMIN
+        --
+        + showMetrics(): void
+        + showCharts(): void
+        + showRecentActivity(): void
+        + autoRefresh(): void
+    }
+
+    class UserManagement extends Page {
+        + url: "/admin/users"
+        + title: "Gestión de Usuarios"
+        + requiredRole: ADMIN
+        --
+        + listUsers(): void
+        + searchUser(query): void
+        + suspendUser(id): void
+        + activateUser(id): void
+        + viewUserReports(id): void
+        + setUserRole(id, role): void
+        + deleteUser(id): void
+    }
+
+    class ContentManagement extends Page {
+        + url: "/admin/content"
+        + title: "Gestión de Contenido"
+        + requiredRole: ADMIN
+        --
+        + manageCategories(): void
+        + manageTags(): void
+        + manageSpots(): void
+        + moderateComments(): void
+    }
+
+    class CategoryManager extends Page {
+        + url: "/admin/categories"
+        + title: "Gestión de Categorías"
+        + requiredRole: ADMIN
+        --
+        + listCategories(): void
+        + createCategory(): void
+        + editCategory(id): void
+        + deleteCategory(id): void
+        + reorderCategories(): void
+    }
+
+    class TagManager extends Page {
+        + url: "/admin/tags"
+        + title: "Gestión de Etiquetas"
+        + requiredRole: ADMIN
+        --
+        + listTags(): void
+        + createTag(): void
+        + editTag(id): void
+        + deleteTag(id): void
+        + mergeTag(id, targetId): void
+    }
+
+    class SpotManagement extends Page {
+        + url: "/admin/spots"
+        + title: "Gestión de Spots"
+        + requiredRole: ADMIN
+        --
+        + listAllSpots(): void
+        + searchSpot(query): void
+        + editSpot(id): void
+        + deleteSpot(id): void
+        + featureSpot(id): void
+    }
+
+    class ReportsManagement extends Page {
+        + url: "/admin/reports"
+        + title: "Gestión de Reportes"
+        + requiredRole: ADMIN
+        --
+        + listAllReports(): void
+        + viewResolvedReports(): void
+        + showStatistics(): void
+        + exportData(): void
+    }
+
+    class SystemConfig extends Page {
+        + url: "/admin/config"
+        + title: "Configuración del Sistema"
+        + requiredRole: ADMIN
+        --
+        + globalSettings(): void
+        + themeSettings(): void
+        + maintenanceMode(): void
+        + backupConfig(): void
+        + emailSettings(): void
+    }
+
+    class SystemLogs extends Page {
+        + url: "/admin/logs"
+        + title: "Logs del Sistema"
+        + requiredRole: ADMIN
+        --
+        + viewUserActivity(): void
+        + viewAdminChanges(): void
+        + viewSystemErrors(): void
+        + filterLogs(criteria): void
+        + exportLogs(): void
+    }
+}
+
+' Navegación de Administradores
+AdminPanel --> AdminDashboard : "dashboard"
+AdminPanel --> UserManagement : "usuarios"
+AdminPanel --> ContentManagement : "contenido"
+AdminPanel --> ReportsManagement : "reportes"
+AdminPanel --> SystemConfig : "configuración"
+AdminPanel --> SystemLogs : "logs"
+
+ContentManagement --> CategoryManager : "categorías"
+ContentManagement --> TagManager : "etiquetas"
+ContentManagement --> SpotManagement : "spots"
+
+UserManagement --> UserProfilePage : "ver perfil usuario"
+SpotManagement --> SpotDetailAuth : "ver spot"
+ReportsManagement --> ReportDetail : "ver reporte"
+
+' Breadcrumb Navigation
+note right of Page
+  Breadcrumb examples:
+  - Inicio > Explorar > Spot Detail
+  - Dashboard > Mi Perfil > Mis Spots
+  - Admin > Usuarios > Detalle Usuario
+  - Moderación > Reportes > Detalle
+end note
+
+' Permisos y Herencia
+note left of UserRole
+  Jerarquía de permisos:
+  ADMIN > MODERATOR > REGISTERED > VISITOR
+  
+  ADMIN: Acceso completo
+  MODERATOR: Panel moderación + Usuario
+  REGISTERED: Funciones usuario autenticado
+  VISITOR: Solo visualización pública
+end note
+
+@enduml

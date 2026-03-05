@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpotMap API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+        
+        .topbar {
+            display: none;
+        }
+        
+        .swagger-ui .info {
+            margin: 50px 0;
+        }
+        
+        .swagger-ui .info .title {
+            font-size: 36px;
+            color: #3b4151;
+        }
+        
+        .swagger-ui .scheme-container {
+            background: #fff;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,.15);
+            margin: 0 0 20px;
+            padding: 15px;
+        }
+        
+        #swagger-ui {
+            max-width: 1460px;
+            margin: 0 auto;
+        }
+        
+        /* Custom colors */
+        .swagger-ui .opblock.opblock-get {
+            border-color: #61affe;
+            background: rgba(97,175,254,.1);
+        }
+        
+        .swagger-ui .opblock.opblock-post {
+            border-color: #49cc90;
+            background: rgba(73,204,144,.1);
+        }
+        
+        .swagger-ui .opblock.opblock-delete {
+            border-color: #f93e3e;
+            background: rgba(249,62,62,.1);
+        }
+        
+        .swagger-ui .opblock.opblock-put {
+            border-color: #fca130;
+            background: rgba(252,161,48,.1);
+        }
+        
+        /* Custom header */
+        .header-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,.1);
+        }
+        
+        .header-bar h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .header-bar p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .badges {
+            margin-top: 15px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            margin: 0 5px;
+            background: rgba(255,255,255,.2);
+            border-radius: 15px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Try it out button styling */
+        .swagger-ui .btn.try-out__btn {
+            background: #667eea;
+            color: white;
+            border: none;
+        }
+        
+        .swagger-ui .btn.try-out__btn:hover {
+            background: #5568d3;
+        }
+        
+        .swagger-ui .btn.execute {
+            background: #49cc90;
+            color: white;
+            border: none;
+        }
+        
+        .swagger-ui .btn.execute:hover {
+            background: #3db87a;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-bar">
+        <h1>🧗 SpotMap API Documentation</h1>
+        <p>API REST para gestión de spots de escalada</p>
+        <div class="badges">
+            <span class="badge">v1.0.0</span>
+            <span class="badge">OpenAPI 3.0.3</span>
+            <span class="badge">PHP 8.2</span>
+            <span class="badge">Supabase Auth</span>
+        </div>
+    </div>
+    
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
+    <script>
+        window.onload = function() {
+            // Detectar si se está accediendo via file:// o http://
+            const isFileProtocol = window.location.protocol === 'file:';
+            const openapiUrl = isFileProtocol 
+                ? '../openapi.json' 
+                : '../openapi.json';
+            
+            const ui = SwaggerUIBundle({
+                url: openapiUrl,
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                persistAuthorization: true,
+                tryItOutEnabled: true,
+                displayRequestDuration: true,
+                filter: true,
+                syntaxHighlight: {
+                    activate: true,
+                    theme: "monokai"
+                },
+                docExpansion: "list",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                tagsSorter: "alpha",
+                operationsSorter: "alpha"
+            });
+
+            window.ui = ui;
+            
+            // Add authorization header automatically if token is in localStorage
+            const token = localStorage.getItem('supabaseToken');
+            if (token) {
+                ui.preauthorizeApiKey('BearerAuth', token);
+                console.log('🔑 Token de Supabase detectado y configurado automáticamente');
+            }
+        };
+    </script>
+</body>
+</html>

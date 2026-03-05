@@ -1,0 +1,419 @@
+@startuml UI_Design_System
+!define RECTANGLE class
+
+' Título
+title SpotMap - Sistema de Diseño (Design System)
+
+' Tokens de Diseño
+package "Design Tokens" <<Frame>> {
+    class ColorTokens {
+        ==Colores Primarios==
+        + primary: #10b981 (Verde esmeralda)
+        + secondary: #3b82f6 (Azul cielo)
+        + accent: #f97316 (Naranja cálido)
+        
+        ==Colores de Fondo==
+        + background: #ffffff (Blanco)
+        + backgroundSecondary: #f3f4f6 (Gris claro)
+        + backgroundDark: #1f2937 (Gris oscuro)
+        
+        ==Colores de Texto==
+        + textPrimary: #1f2937 (Gris oscuro)
+        + textSecondary: #6b7280 (Gris medio)
+        + textLight: #9ca3af (Gris claro)
+        
+        ==Colores de Estado==
+        + error: #ef4444 (Rojo)
+        + success: #22c55e (Verde)
+        + warning: #eab308 (Amarillo)
+        + info: #3b82f6 (Azul)
+        
+        ==Colores de Categorías==
+        + mirador: #ef4444 (Rojo)
+        + playa: #3b82f6 (Azul)
+        + urbano: #f97316 (Naranja)
+        + naturaleza: #22c55e (Verde)
+        + arquitectura: #8b5cf6 (Púrpura)
+        + nocturno: #1f2937 (Negro)
+        --
+        + getColor(name: string): string
+        + getCategoryColor(category: string): string
+    }
+
+    class TypographyTokens {
+        ==Familia de Fuentes==
+        + fontFamily: "Inter, Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
+        + fontFamilyMono: "Fira Code, Consolas, monospace"
+        
+        ==Tamaños==
+        + h1: 32px (2rem)
+        + h2: 24px (1.5rem)
+        + h3: 18px (1.125rem)
+        + body: 16px (1rem)
+        + small: 14px (0.875rem)
+        + tiny: 12px (0.75rem)
+        + mini: 10px (0.625rem)
+        
+        ==Pesos==
+        + light: 300
+        + regular: 400
+        + medium: 500
+        + semiBold: 600
+        + bold: 700
+        + extraBold: 800
+        
+        ==Altura de Línea==
+        + lineHeightTight: 1.25
+        + lineHeightNormal: 1.5
+        + lineHeightRelaxed: 1.75
+        --
+        + getTextStyle(type: string): TextStyle
+    }
+
+    class SpacingTokens {
+        ==Escala de Espaciado==
+        + space0: 0px
+        + space1: 4px (0.25rem)
+        + space2: 8px (0.5rem)
+        + space3: 12px (0.75rem)
+        + space4: 16px (1rem)
+        + space5: 20px (1.25rem)
+        + space6: 24px (1.5rem)
+        + space8: 32px (2rem)
+        + space10: 40px (2.5rem)
+        + space12: 48px (3rem)
+        + space16: 64px (4rem)
+        
+        ==Padding Estándar==
+        + paddingXS: 8px
+        + paddingSM: 16px
+        + paddingMD: 24px
+        + paddingLG: 32px
+        
+        ==Margin Estándar==
+        + marginSM: 16px
+        + marginMD: 24px
+        + marginLG: 32px
+        
+        ==Gap==
+        + gapXS: 8px
+        + gapSM: 12px
+        + gapMD: 16px
+        + gapLG: 24px
+        --
+        + getSpacing(level: number): number
+    }
+
+    class ShadowTokens {
+        ==Sombras==
+        + shadowSM: 0 1px 2px 0 rgba(0,0,0,0.05)
+        + shadowMD: 0 4px 6px -1px rgba(0,0,0,0.1)
+        + shadowLG: 0 10px 15px -3px rgba(0,0,0,0.1)
+        + shadowXL: 0 20px 25px -5px rgba(0,0,0,0.1)
+        + shadow2XL: 0 25px 50px -12px rgba(0,0,0,0.25)
+        
+        ==Elevación==
+        + elevation1: shadowSM
+        + elevation2: shadowMD
+        + elevation3: shadowLG
+        + elevation4: shadowXL
+        --
+        + getShadow(level: number): string
+    }
+
+    class BorderTokens {
+        ==Radio==
+        + radiusNone: 0px
+        + radiusSM: 4px
+        + radiusMD: 6px
+        + radiusLG: 8px
+        + radiusXL: 12px
+        + radiusFull: 9999px
+        
+        ==Ancho==
+        + borderWidth: 1px
+        + borderWidthMD: 2px
+        + borderWidthLG: 4px
+        
+        ==Colores==
+        + borderLight: #e5e7eb
+        + borderDefault: #d1d5db
+        + borderDark: #9ca3af
+        --
+        + getBorderRadius(size: string): number
+    }
+
+    class BreakpointTokens {
+        ==Responsive Breakpoints==
+        + xs: 0px (mobile)
+        + sm: 576px (mobile landscape)
+        + md: 768px (tablet)
+        + lg: 992px (desktop)
+        + xl: 1200px (large desktop)
+        + xxl: 1400px (extra large)
+        --
+        + mediaQuery(breakpoint: string): string
+        + getCurrentBreakpoint(): string
+    }
+
+    class AnimationTokens {
+        ==Duración==
+        + durationFast: 150ms
+        + durationNormal: 300ms
+        + durationSlow: 500ms
+        
+        ==Timing Functions==
+        + easeIn: cubic-bezier(0.4, 0, 1, 1)
+        + easeOut: cubic-bezier(0, 0, 0.2, 1)
+        + easeInOut: cubic-bezier(0.4, 0, 0.2, 1)
+        
+        ==Transiciones==
+        + transitionAll: all 300ms ease
+        + transitionColors: colors 200ms ease
+        + transitionTransform: transform 300ms ease
+        --
+        + getTransition(property: string): string
+    }
+
+    class ZIndexTokens {
+        ==Capas==
+        + base: 0
+        + dropdown: 100
+        + sticky: 200
+        + fixed: 300
+        + modal: 400
+        + popover: 500
+        + tooltip: 600
+        + notification: 700
+        --
+        + getZIndex(layer: string): number
+    }
+}
+
+' Componentes del Sistema de Diseño
+package "Component Patterns" <<Frame>> {
+    class ButtonPattern {
+        ==Variants==
+        + primary: bg-primary, text-white, hover-darker
+        + secondary: border-gray, text-gray, bg-transparent
+        + danger: bg-error, text-white, hover-darker
+        + ghost: transparent, hover-bg-gray
+        + link: no-border, text-primary, underline-hover
+        
+        ==Sizes==
+        + small: padding-2 padding-x-4, text-sm
+        + medium: padding-3 padding-x-6, text-base
+        + large: padding-4 padding-x-8, text-lg
+        
+        ==States==
+        + default: normal appearance
+        + hover: darker/lighter bg, transform
+        + active: pressed effect
+        + disabled: opacity-50, cursor-not-allowed
+        + loading: spinner icon, disabled
+        --
+        borderRadius: 6px
+        transition: all 300ms
+        --
+        + render(variant, size, state): HTMLElement
+    }
+
+    class CardPattern {
+        ==Variants==
+        + default: white bg, border, shadow-sm
+        + elevated: white bg, shadow-md, no-border
+        + outlined: border-2, no-shadow
+        + filled: bg-secondary, no-border
+        
+        ==Padding==
+        + compact: 12px
+        + default: 16px
+        + relaxed: 24px
+        
+        ==Structure==
+        + header: optional, border-bottom
+        + body: main content
+        + footer: optional, border-top
+        --
+        borderRadius: 8px
+        border: 1px solid #e5e7eb
+        --
+        + render(): HTMLElement
+        + setContent(content): void
+    }
+
+    class InputPattern {
+        ==Types==
+        + text: standard input
+        + email: with validation
+        + password: with toggle visibility
+        + number: with spinner
+        + search: with icon and clear button
+        + textarea: multiline input
+        
+        ==States==
+        + default: border-gray
+        + focus: border-blue (2px)
+        + error: border-red, error message
+        + disabled: opacity-50, cursor-not-allowed
+        + success: border-green, check icon
+        
+        ==Sizes==
+        + small: padding-2, text-sm
+        + medium: padding-3, text-base
+        + large: padding-4, text-lg
+        --
+        borderRadius: 6px
+        transition: border-color 200ms
+        --
+        + validate(): boolean
+        + showError(message): void
+    }
+
+    class BadgePattern {
+        ==Variants==
+        + default: bg-gray, text-gray-dark
+        + primary: bg-primary, text-white
+        + success: bg-success, text-white
+        + warning: bg-warning, text-black
+        + danger: bg-error, text-white
+        + category: bg-category-color, text-white
+        
+        ==Sizes==
+        + small: padding-1 padding-x-2, text-xs
+        + medium: padding-2 padding-x-3, text-sm
+        + large: padding-2 padding-x-4, text-base
+        --
+        borderRadius: 12px
+        fontWeight: medium
+        --
+        + render(variant, size): HTMLElement
+    }
+
+    class ModalPattern {
+        ==Structure==
+        + overlay: full-screen, bg-black opacity-50
+        + container: centered, max-width
+        + header: title + close button
+        + body: scroll-y if needed
+        + footer: actions (optional)
+        
+        ==Sizes==
+        + small: max-width-sm (400px)
+        + medium: max-width-md (600px)
+        + large: max-width-lg (800px)
+        + fullscreen: 100vw × 100vh
+        
+        ==Animations==
+        + enter: fade-in + scale-up (300ms)
+        + exit: fade-out + scale-down (200ms)
+        --
+        zIndex: 400
+        backdropBlur: 4px
+        --
+        + open(): void
+        + close(): void
+        + setContent(content): void
+    }
+
+    class ToastPattern {
+        ==Variants==
+        + success: bg-success, check icon
+        + error: bg-error, x icon
+        + warning: bg-warning, alert icon
+        + info: bg-info, info icon
+        
+        ==Position==
+        + top-right: default
+        + top-left
+        + bottom-right
+        + bottom-left
+        + top-center
+        + bottom-center
+        
+        ==Duration==
+        + short: 3000ms
+        + normal: 5000ms
+        + long: 7000ms
+        + persistent: no auto-close
+        --
+        animation: slide-in (300ms)
+        dismissible: true
+        --
+        + show(message, variant): void
+        + hide(): void
+    }
+
+    class LoaderPattern {
+        ==Types==
+        + spinner: rotating circle
+        + dots: bouncing dots
+        + bar: progress bar
+        + skeleton: content placeholder
+        
+        ==Sizes==
+        + small: 16px
+        + medium: 32px
+        + large: 48px
+        
+        ==Colors==
+        + primary: #10b981
+        + secondary: #3b82f6
+        + white: #ffffff
+        --
+        animation: spin/bounce 1s infinite
+        --
+        + show(): void
+        + hide(): void
+    }
+}
+
+' Relaciones entre tokens y patrones
+ButtonPattern ..> ColorTokens : uses colors
+ButtonPattern ..> SpacingTokens : uses spacing
+ButtonPattern ..> BorderTokens : uses border-radius
+ButtonPattern ..> AnimationTokens : uses transitions
+
+CardPattern ..> ColorTokens : uses colors
+CardPattern ..> SpacingTokens : uses padding
+CardPattern ..> BorderTokens : uses borders
+CardPattern ..> ShadowTokens : uses shadows
+
+InputPattern ..> ColorTokens : uses colors
+InputPattern ..> SpacingTokens : uses padding
+InputPattern ..> BorderTokens : uses borders
+InputPattern ..> AnimationTokens : uses transitions
+
+ModalPattern ..> ZIndexTokens : uses z-index
+ModalPattern ..> AnimationTokens : uses animations
+ModalPattern ..> ShadowTokens : uses shadows
+
+ToastPattern ..> ColorTokens : uses colors
+ToastPattern ..> ZIndexTokens : uses z-index
+ToastPattern ..> AnimationTokens : uses animations
+
+LoaderPattern ..> ColorTokens : uses colors
+LoaderPattern ..> AnimationTokens : uses animations
+
+note right of ColorTokens
+  Todos los colores definidos
+  en formato hexadecimal.
+  Accesibilidad: Contraste mínimo 4.5:1
+end note
+
+note right of TypographyTokens
+  Escala tipográfica modular (1.25)
+  Fuentes web-safe con fallbacks
+end note
+
+note right of SpacingTokens
+  Sistema de espaciado base-8
+  Consistencia en toda la UI
+end note
+
+note right of BreakpointTokens
+  Mobile-first approach
+  Progressive enhancement
+end note
+
+@enduml

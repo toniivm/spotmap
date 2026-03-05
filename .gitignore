@@ -1,0 +1,72 @@
+# ⚠️ PROYECTO PROPIETARIO - SPOTMAP ⚠️
+# Copyright (c) 2026 Antonio Valero
+# CONFIDENCIAL - NO compartir código fuente original
+
+# === Credenciales y Configuración Sensible ===
+backend/.env
+backend/.env.local
+frontend/js/supabaseConfig.js
+config/credentials.json
+config/*.key
+config/*.pem
+config/blocked_ips.txt
+
+# === CÓDIGO FUENTE ORIGINAL ===
+
+# === Tests y Coverage ===
+coverage/
+TESTING.md
+RESUMEN_MEJORAS.md
+
+# === Archivos temporales y cache ===
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# === Node modules (si usas npm en el futuro) ===
+node_modules/
+package-lock.json
+yarn.lock
+
+# === Composer (PHP) ===
+backend/vendor/
+composer.lock
+
+# === Uploads y datos de usuario ===
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+frontend/uploads/*
+
+# === Bases de datos locales ===
+*.sqlite
+*.db
+*.sql.backup
+
+# === IDEs y editores ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# === Sistema operativo ===
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# === Build y dist (si usas bundler futuro) ===
+dist/
+build/
+.cache/
+
+# === Archivos de prueba personales ===
+test-*.php
+test-*.js
+debug-*.log

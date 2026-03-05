@@ -1,0 +1,345 @@
+@startuml UI_Navigation_Flowchart
+!theme plain
+
+title SpotMap - Diagrama de Flujo de Navegación por Roles
+
+' Estados iniciales
+|Visitante|
+start
+:Acceder a SpotMap;
+
+' Decisión de login
+if (¿Usuario registrado?) then (no)
+  :Ver Mapa Público;
+  
+  fork
+    :Explorar Spots;
+    :Filtrar por categoría;
+    :Buscar spots;
+    :Ver detalle spot;
+    note right
+      Sin opciones de:
+      - Crear spot
+      - Favoritos
+      - Comentar
+      - Valorar
+    end note
+  fork again
+    :Ver Información;
+    :Sobre SpotMap;
+    :Términos;
+    :Privacidad;
+  end fork
+  
+  :Ir a Login/Registro;
+  
+  if (¿Registrarse?) then (sí)
+    |Visitante|
+    :Formulario Registro;
+    :Crear cuenta;
+    :Verificar email;
+    :Login automático;
+  else (login)
+    |Visitante|
+    :Formulario Login;
+    :Validar credenciales;
+  endif
+  
+else (sí)
+  :Iniciar Sesión;
+endif
+
+' Usuario autenticado
+|Usuario Registrado|
+:Dashboard Usuario;
+
+fork
+  :Ver Mapa Interactivo;
+  
+  fork
+    :Explorar spots;
+    :Aplicar filtros;
+    :Ver detalle spot;
+    
+    fork
+      :⭐ Valorar spot;
+    fork again
+      :❤️ Añadir a favoritos;
+    fork again
+      :💬 Comentar;
+      :Responder comentarios;
+    fork again
+      :📢 Reportar contenido;
+    fork again
+      :🔗 Compartir spot;
+    end fork
+    
+  fork again
+    :➕ Crear Nuevo Spot;
+    :Completar formulario;
+    
+    repeat
+      :Subir imágenes;
+      :Seleccionar ubicación;
+      :Añadir descripción;
+      :Elegir categoría;
+      :Validar campos;
+    repeat while (¿Formulario válido?) is (no)
+    ->sí;
+    
+    :Vista previa;
+    :Guardar spot;
+    :Notificar creación;
+    
+  end fork
+
+fork again
+  :Mi Perfil;
+  
+  fork
+    :Ver info personal;
+    :Actualizar avatar;
+    :Editar datos;
+  fork again
+    :Mis Spots creados;
+    
+    fork
+      :✏️ Editar spot;
+    fork again
+      :🗑️ Eliminar spot;
+    fork again
+      :📊 Ver estadísticas;
+    end fork
+    
+  fork again
+    :❤️ Mis Favoritos;
+    :Ver spots guardados;
+    :Eliminar favorito;
+  fork again
+    :💬 Mis Comentarios;
+    :Ver historial;
+    :Editar comentario;
+  fork again
+    :⚙️ Configuración;
+    :Cambiar contraseña;
+    :Privacidad;
+    :Notificaciones;
+  end fork
+
+fork again
+  :🔔 Notificaciones;
+  :Ver notificaciones;
+  :Marcar como leída;
+  
+end fork
+
+' Verificar si es Moderador
+if (¿Es Moderador o Admin?) then (sí)
+  
+  |Moderador|
+  :Panel de Moderación;
+  
+  fork
+    :📋 Reportes Pendientes;
+    :Filtrar reportes;
+    :Ver detalle reporte;
+    
+    :Vista previa contenido;
+    :Evaluar reporte;
+    
+    if (¿Acción a tomar?) then (aprobar)
+      :✅ Aprobar contenido;
+      :Cerrar reporte;
+    else if (ocultar)
+      :👁️ Ocultar contenido;
+      :Notificar autor;
+    else if (eliminar)
+      :🗑️ Eliminar contenido;
+      :Notificar autor;
+      :Registrar decisión;
+    else (cerrar sin acción)
+      :❌ Cerrar reporte;
+      :Añadir comentario;
+    endif
+    
+  fork again
+    :👁️ Contenido Oculto;
+    :Listar spots ocultos;
+    :Listar comentarios ocultos;
+    
+    if (¿Restaurar?) then (sí)
+      :Restaurar contenido;
+      :Notificar autor;
+    endif
+    
+  fork again
+    :📊 Estadísticas;
+    :Reportes por período;
+    :Contenido eliminado;
+    :Usuarios reportados;
+    :Exportar informe;
+    
+  fork again
+    :📜 Historial Decisiones;
+    :Ver acciones pasadas;
+    :Filtrar por fecha;
+    :Ver moderador;
+    
+  end fork
+  
+  ' Verificar si es Admin
+  if (¿Es Administrador?) then (sí)
+    
+    |Administrador|
+    :Panel de Administración;
+    
+    fork
+      :📊 Dashboard Admin;
+      :Métricas globales;
+      :Gráficos actividad;
+      :Últimas acciones;
+      note right
+        Auto-refresh cada 30s
+      end note
+      
+    fork again
+      :👥 Gestión Usuarios;
+      :Listar usuarios;
+      :Buscar usuario;
+      
+      fork
+        :Ver perfil completo;
+      fork again
+        :Suspender usuario;
+      fork again
+        :Activar usuario;
+      fork again
+        :Cambiar rol;
+        note right
+          Roles disponibles:
+          - Usuario
+          - Moderador
+          - Admin
+        end note
+      fork again
+        :Ver reportes usuario;
+      fork again
+        :Eliminar usuario;
+        :Confirmar acción;
+      end fork
+      
+    fork again
+      :📁 Gestión Contenido;
+      
+      fork
+        :🏷️ Categorías;
+        
+        fork
+          :Crear categoría;
+          :Definir nombre;
+          :Asignar color;
+          :Asignar icono;
+        fork again
+          :Editar categoría;
+        fork again
+          :Eliminar categoría;
+          :Reasignar spots;
+        fork again
+          :Reordenar categorías;
+        end fork
+        
+      fork again
+        :🏷️ Etiquetas (Tags);
+        
+        fork
+          :Crear tag;
+        fork again
+          :Editar tag;
+        fork again
+          :Eliminar tag;
+        fork again
+          :Fusionar tags;
+        end fork
+        
+      fork again
+        :📍 Spots;
+        :Listar todos spots;
+        
+        fork
+          :Editar spot;
+        fork again
+          :Eliminar spot;
+        fork again
+          :⭐ Destacar spot;
+        end fork
+        
+      fork again
+        :💬 Comentarios;
+        :Moderar comentarios;
+        :Eliminar inapropiados;
+        
+      end fork
+      
+    fork again
+      :📢 Gestión Reportes;
+      :Ver todos reportes;
+      :Reportes resueltos;
+      :Estadísticas detalladas;
+      :Exportar datos CSV/JSON;
+      
+    fork again
+      :⚙️ Configuración Sistema;
+      
+      fork
+        :Ajustes globales;
+        :Límites de subida;
+        :Tiempo sesión;
+      fork again
+        :🎨 Tema visual;
+        :Modo claro/oscuro;
+      fork again
+        :🔧 Modo mantenimiento;
+        :Activar/Desactivar;
+        :Mensaje personalizado;
+      fork again
+        :💾 Backups;
+        :Programar backup;
+        :Restaurar backup;
+      fork again
+        :📧 Email settings;
+        :SMTP config;
+        :Plantillas email;
+      end fork
+      
+    fork again
+      :📜 Logs Sistema;
+      
+      fork
+        :Actividad usuarios;
+        :Login/logout;
+        :Acciones realizadas;
+      fork again
+        :Cambios admin;
+        :Modificaciones config;
+        :Cambios de roles;
+      fork again
+        :⚠️ Errores sistema;
+        :Errores 500;
+        :Errores BD;
+      end fork
+      
+      :Filtrar logs;
+      :Exportar logs;
+      
+    end fork
+    
+  endif (admin)
+  
+endif (moderador/admin)
+
+' Fin de sesión
+|Cualquier Usuario|
+:Cerrar Sesión;
+stop
+
+@enduml
