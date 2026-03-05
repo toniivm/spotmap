@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 
-const rawBackendBasePath = process.env.VITE_DEV_BACKEND_BASE_PATH || '/https-github.com-antonio-valero-daw2personal.worktrees/Proyecto/spotMap/backend/public/index.php'
+const rawBackendBasePath = process.env.VITE_DEV_BACKEND_BASE_PATH || '/https-github.com-antonio-valero-daw2personal/SPOTMAP/Proyecto/backend/public/index.php'
 const backendBasePath = rawBackendBasePath.startsWith('/') ? rawBackendBasePath.replace(/\/+$/, '') : `/${rawBackendBasePath.replace(/\/+$/, '')}`
 const backendPublicPath = backendBasePath.endsWith('/index.php')
   ? backendBasePath.slice(0, -('/index.php'.length))

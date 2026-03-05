@@ -21,7 +21,7 @@ const envBackendAuthEnabled = String(import.meta.env.VITE_BACKEND_AUTH_ENABLED |
 const envOauthEnabled = String(import.meta.env.VITE_OAUTH_ENABLED || '').trim().toLowerCase();
 const envOauthProviders = String(import.meta.env.VITE_OAUTH_PROVIDERS || 'google,facebook').trim();
 
-const backendPublicBase = envBackendPublicBase || `${window.location.origin}${projectBase}backend/public`;
+const backendPublicBase = envBackendPublicBase || `${window.location.origin}${projectBase}Proyecto/backend/public`;
 const oauthProviders = envOauthProviders
   .split(',')
   .map((value) => value.trim().toLowerCase())
@@ -34,7 +34,7 @@ export const runtimeConfig = {
     envApiBase ||
     (import.meta.env.DEV
       ? '/api'
-      : `${window.location.origin}${projectBase}backend/public/index.php`),
+      : `${window.location.origin}${projectBase}Proyecto/backend/public/index.php`),
   authLoginUrl: import.meta.env.DEV ? '/auth-login.php' : `${backendPublicBase}/auth-login.php`,
   backendAuthEnabled: envBackendAuthEnabled === '1' || envBackendAuthEnabled === 'true',
   oauthEnabled: envOauthEnabled === '1' || envOauthEnabled === 'true',
