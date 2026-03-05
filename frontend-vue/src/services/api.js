@@ -1,5 +1,10 @@
 import { getSupabaseClient, getUserRole, requireSession } from './supabase';
 
+const FEATURES = {
+  notifications: String(import.meta.env.VITE_FEATURE_NOTIFICATIONS || 'false').toLowerCase() === 'true',
+  ratingsStats: String(import.meta.env.VITE_FEATURE_RATINGS_STATS || 'false').toLowerCase() === 'true',
+};
+
 function parseEndpoint(endpoint) {
   const url = new URL(endpoint.startsWith('/') ? endpoint : `/${endpoint}`, 'http://localhost');
   return {
@@ -29,6 +34,25 @@ function normalizeSpotRow(row = {}) {
   };
 }
 
+function getErrorText(error) {
+  return [error?.message, error?.details, error?.hint, error?.code]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+}
+
+function isMissingTableError(error, tableName) {
+  const text = getErrorText(error);
+  if (!text) return false;
+  return (
+    text.includes('42p01')
+    || text.includes('pgrst205')
+    || text.includes(`relation "public.${tableName}" does not exist`)
+    || text.includes(`relation "${tableName}" does not exist`)
+    || text.includes(`could not find the table 'public.${tableName}'`)
+  );
+}
+
 async function requireModeratorSession() {
   const session = await requireSession();
   const role = await getUserRole(session.user.id);
@@ -38,12 +62,38 @@ async function requireModeratorSession() {
   return session;
 }
 
+async function requireSpotManagementPermission(spotId) {
+  const session = await requireSession();
+  const role = await getUserRole(session.user.id);
+  if (['admin', 'moderator'].includes(role)) {
+    return { session, role, isOwner: false };
+  }
+
+  const supabase = getSupabaseClient();
+  const { data: spot, error } = await supabase
+    .from('spots')
+    .select('id,user_id')
+    .eq('id', spotId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo validar permisos');
+  }
+  if (!spot?.id) {
+    throw new Error('Spot no encontrado');
+  }
+  if (String(spot.user_id || '') !== String(session.user.id)) {
+    throw new Error('Forbidden');
+  }
+
+  return { session, role, isOwner: true };
+}
+
 async function getSpots(searchParams) {
   const supabase = getSupabaseClient();
   const page = Math.max(1, toInt(searchParams.get('page'), 1));
   const limit = Math.max(1, Math.min(100, toInt(searchParams.get('limit'), 24)));
   const category = String(searchParams.get('category') || '').trim();
-  const tag = String(searchParams.get('tag') || '').trim();
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -56,10 +106,6 @@ async function getSpots(searchParams) {
 
   if (category) {
     query = query.eq('category', category);
-  }
-
-  if (tag) {
-    query = query.contains('tags', [tag]);
   }
 
   const { data, error, count } = await query;
@@ -177,6 +223,66 @@ async function createSpot(body) {
   return { data: normalizeSpotRow(created) };
 }
 
+async function updateSpot(path, body) {
+  const match = path.match(/^\/spots\/(\d+)$/);
+  const spotId = Number(match?.[1] || 0);
+  if (!spotId) throw new Error('Spot inválido');
+
+  await requireSpotManagementPermission(spotId);
+
+  if (!body || typeof body !== 'object' || body instanceof FormData) {
+    throw new Error('Formato inválido para actualizar spot');
+  }
+
+  const updates = {};
+  if (body.title !== undefined) updates.title = String(body.title || '').trim();
+  if (body.description !== undefined) updates.description = String(body.description || '').trim();
+  if (body.category !== undefined) updates.category = String(body.category || '').trim();
+  if (body.tags !== undefined) updates.tags = normalizeTags(body.tags);
+  if (body.lat !== undefined) {
+    const lat = Number(body.lat);
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new Error('Latitud inválida');
+    updates.lat = lat;
+  }
+  if (body.lng !== undefined) {
+    const lng = Number(body.lng);
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) throw new Error('Longitud inválida');
+    updates.lng = lng;
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new Error('No hay cambios para guardar');
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from('spots')
+    .update(updates)
+    .eq('id', spotId)
+    .select('*')
+    .single();
+
+  if (error) throw new Error(error.message || 'No se pudo actualizar el spot');
+  return { data: normalizeSpotRow(data) };
+}
+
+async function deleteSpot(path) {
+  const match = path.match(/^\/spots\/(\d+)$/);
+  const spotId = Number(match?.[1] || 0);
+  if (!spotId) throw new Error('Spot inválido');
+
+  await requireSpotManagementPermission(spotId);
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('spots')
+    .delete()
+    .eq('id', spotId);
+
+  if (error) throw new Error(error.message || 'No se pudo eliminar el spot');
+  return { success: true };
+}
+
 async function getPending(searchParams) {
   await requireModeratorSession();
   const supabase = getSupabaseClient();
@@ -226,14 +332,20 @@ async function getModerationStats() {
   const [spotsRes, reportsRes, ratingsRes] = await Promise.all([
     supabase.from('spots').select('id', { count: 'exact', head: true }),
     supabase.from('reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    supabase.from('ratings').select('rating'),
+    FEATURES.ratingsStats
+      ? supabase.from('ratings').select('rating')
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   if (spotsRes.error) throw new Error(spotsRes.error.message || 'Error cargando spots');
-  if (reportsRes.error) throw new Error(reportsRes.error.message || 'Error cargando reportes');
-  if (ratingsRes.error) throw new Error(ratingsRes.error.message || 'Error cargando ratings');
+  if (reportsRes.error && !isMissingTableError(reportsRes.error, 'reports')) {
+    throw new Error(reportsRes.error.message || 'Error cargando reportes');
+  }
+  if (ratingsRes.error && !isMissingTableError(ratingsRes.error, 'ratings')) {
+    throw new Error(ratingsRes.error.message || 'Error cargando ratings');
+  }
 
-  const ratings = (ratingsRes.data || [])
+  const ratings = (Array.isArray(ratingsRes.data) ? ratingsRes.data : [])
     .map((row) => Number(row.rating))
     .filter((value) => Number.isFinite(value));
 
@@ -251,6 +363,14 @@ async function getModerationStats() {
 }
 
 async function getNotifications(searchParams) {
+  if (!FEATURES.notifications) {
+    return {
+      data: {
+        notifications: [],
+      },
+    };
+  }
+
   const session = await requireSession();
   const supabase = getSupabaseClient();
   const limit = Math.max(1, Math.min(100, toInt(searchParams.get('limit'), 20)));
@@ -268,7 +388,16 @@ async function getNotifications(searchParams) {
   }
 
   const { data, error } = await query;
-  if (error) throw new Error(error.message || 'No se pudieron cargar notificaciones');
+  if (error) {
+    if (isMissingTableError(error, 'notifications')) {
+      return {
+        data: {
+          notifications: [],
+        },
+      };
+    }
+    throw new Error(error.message || 'No se pudieron cargar notificaciones');
+  }
 
   return {
     data: {
@@ -278,6 +407,10 @@ async function getNotifications(searchParams) {
 }
 
 async function getUnreadCount() {
+  if (!FEATURES.notifications) {
+    return { data: { count: 0 } };
+  }
+
   const session = await requireSession();
   const supabase = getSupabaseClient();
   const { count, error } = await supabase
@@ -286,11 +419,20 @@ async function getUnreadCount() {
     .eq('user_id', session.user.id)
     .eq('is_read', false);
 
-  if (error) throw new Error(error.message || 'No se pudo cargar el contador');
+  if (error) {
+    if (isMissingTableError(error, 'notifications')) {
+      return { data: { count: 0 } };
+    }
+    throw new Error(error.message || 'No se pudo cargar el contador');
+  }
   return { data: { count: Number(count || 0) } };
 }
 
 async function markNotificationRead(path) {
+  if (!FEATURES.notifications) {
+    return { success: true };
+  }
+
   const session = await requireSession();
   const supabase = getSupabaseClient();
   const match = path.match(/^\/notifications\/(\d+)\/read$/);
@@ -303,11 +445,17 @@ async function markNotificationRead(path) {
     .eq('id', notificationId)
     .eq('user_id', session.user.id);
 
-  if (error) throw new Error(error.message || 'No se pudo marcar como leída');
+  if (error && !isMissingTableError(error, 'notifications')) {
+    throw new Error(error.message || 'No se pudo marcar como leída');
+  }
   return { success: true };
 }
 
 async function markAllNotificationsRead() {
+  if (!FEATURES.notifications) {
+    return { success: true };
+  }
+
   const session = await requireSession();
   const supabase = getSupabaseClient();
   const { error } = await supabase
@@ -316,11 +464,17 @@ async function markAllNotificationsRead() {
     .eq('user_id', session.user.id)
     .eq('is_read', false);
 
-  if (error) throw new Error(error.message || 'No se pudieron marcar todas como leídas');
+  if (error && !isMissingTableError(error, 'notifications')) {
+    throw new Error(error.message || 'No se pudieron marcar todas como leídas');
+  }
   return { success: true };
 }
 
 async function deleteNotification(path) {
+  if (!FEATURES.notifications) {
+    return { success: true };
+  }
+
   const session = await requireSession();
   const supabase = getSupabaseClient();
   const match = path.match(/^\/notifications\/(\d+)$/);
@@ -333,7 +487,9 @@ async function deleteNotification(path) {
     .eq('id', notificationId)
     .eq('user_id', session.user.id);
 
-  if (error) throw new Error(error.message || 'No se pudo eliminar notificación');
+  if (error && !isMissingTableError(error, 'notifications')) {
+    throw new Error(error.message || 'No se pudo eliminar notificación');
+  }
   return { success: true };
 }
 
@@ -347,6 +503,14 @@ export async function apiFetch(endpoint, { method = 'GET', body = null } = {}) {
 
   if (upperMethod === 'POST' && path === '/spots') {
     return createSpot(body);
+  }
+
+  if ((upperMethod === 'PATCH' || upperMethod === 'PUT') && /^\/spots\/\d+$/.test(path)) {
+    return updateSpot(path, body);
+  }
+
+  if (upperMethod === 'DELETE' && /^\/spots\/\d+$/.test(path)) {
+    return deleteSpot(path);
   }
 
   if (upperMethod === 'GET' && path === '/admin/pending') {

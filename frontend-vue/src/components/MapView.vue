@@ -27,8 +27,11 @@ const mapRoot = ref(null);
 let map = null;
 let layerGroup = null;
 let markerById = new Map();
+let resizeObserver = null;
 const DEFAULT_CENTER = [40.4168, -3.7038];
 const DEFAULT_ZOOM = 6;
+const MIN_ZOOM = 5;
+const MAX_ZOOM = 17;
 
 function escapeHtml(value) {
   return String(value ?? '')
@@ -137,18 +140,39 @@ function renderMarkers() {
 onMounted(() => {
   map = L.map(mapRoot.value, {
     zoomControl: true,
+    minZoom: MIN_ZOOM,
+    maxZoom: MAX_ZOOM,
+    worldCopyJump: false,
+    maxBounds: [[-85, -180], [85, 180]],
+    maxBoundsViscosity: 1,
   }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors',
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: MAX_ZOOM,
+    minZoom: MIN_ZOOM,
+    noWrap: true,
+    attribution: 'Tiles &copy; Esri',
   }).addTo(map);
 
   layerGroup = L.layerGroup().addTo(map);
+
+  resizeObserver = new ResizeObserver(() => {
+    if (map) {
+      map.invalidateSize();
+    }
+  });
+  if (mapRoot.value) {
+    resizeObserver.observe(mapRoot.value);
+  }
+
   renderMarkers();
 });
 
 onBeforeUnmount(() => {
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+    resizeObserver = null;
+  }
   if (map) {
     map.remove();
     map = null;

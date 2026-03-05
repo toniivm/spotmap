@@ -9,10 +9,22 @@ export const useNotificationsStore = defineStore('notifications', () => {
   const loading = ref(false);
   const error = ref('');
   const polling = ref(false);
+  const supported = ref(true);
   const pollMs = 30000;
   let timer = null;
 
   const hasUnread = computed(() => unreadCount.value > 0);
+
+  function isNotificationsUnsupported(errorValue) {
+    const text = String(errorValue?.message || errorValue || '').toLowerCase();
+    return text.includes('notifications')
+      && (
+        text.includes('does not exist')
+        || text.includes('could not find the table')
+        || text.includes('pgrst205')
+        || text.includes('42p01')
+      );
+  }
 
   function normalizeItems(raw) {
     return (Array.isArray(raw) ? raw : []).map((item) => ({
@@ -42,8 +54,15 @@ export const useNotificationsStore = defineStore('notifications', () => {
       const countPayload = await apiFetch('/notifications/unread-count', { token });
       const countData = countPayload?.data ?? countPayload ?? {};
       unreadCount.value = Number(countData.count || 0);
+      supported.value = true;
     } catch (err) {
-      error.value = err instanceof Error ? err.message : 'No se pudieron cargar notificaciones';
+      if (isNotificationsUnsupported(err)) {
+        supported.value = false;
+        stopPolling();
+        error.value = '';
+      } else {
+        error.value = err instanceof Error ? err.message : 'No se pudieron cargar notificaciones';
+      }
       items.value = [];
       unreadCount.value = 0;
     } finally {
@@ -60,6 +79,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
   }
 
   function startPolling() {
+    if (!supported.value) return;
     stopPolling();
     polling.value = true;
     timer = setInterval(() => {
@@ -69,6 +89,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   async function initForSession() {
     await load();
+    if (!supported.value) return;
     startPolling();
   }
 
@@ -107,6 +128,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   function clearForLogout() {
     stopPolling();
+    supported.value = true;
     items.value = [];
     unreadCount.value = 0;
     error.value = '';
@@ -119,6 +141,7 @@ export const useNotificationsStore = defineStore('notifications', () => {
     loading,
     error,
     polling,
+    supported,
     load,
     initForSession,
     stopPolling,

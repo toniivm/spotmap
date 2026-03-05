@@ -61,6 +61,7 @@ let createSpotMapMarker = null;
 
 const selectedSpot = computed(() => spotsStore.filteredSpots.find((spot) => String(spot.id) === String(selectedSpotId.value)) ?? null);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
+const isAdmin = computed(() => authStore.isAdmin);
 const isModerator = computed(() => authStore.isModerator);
 const currentUsername = computed(() => authStore.username || 'Usuario');
 const currentRoleLabel = computed(() => authStore.roleLabel || 'Usuario');
@@ -483,6 +484,54 @@ function handleUseMyLocation() {
   );
 }
 
+async function handleDeleteSpot(spot) {
+  const spotId = Number(spot?.id || 0);
+  if (!spotId) return;
+
+  const ok = window.confirm(`¿Eliminar spot "${spot?.title || 'sin título'}"?`);
+  if (!ok) return;
+
+  try {
+    await apiFetch(`/spots/${spotId}`, { method: 'DELETE' });
+    if (String(selectedSpotId.value) === String(spotId)) {
+      selectedSpotId.value = null;
+    }
+    await spotsStore.reload();
+    showToast('Spot eliminado', 'success');
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : 'No se pudo eliminar el spot', 'error');
+  }
+}
+
+async function handleEditSpot(spot) {
+  const spotId = Number(spot?.id || 0);
+  if (!spotId) return;
+
+  const title = window.prompt('Nuevo título:', String(spot?.title || '').trim());
+  if (title === null) return;
+
+  const description = window.prompt('Nueva descripción:', String(spot?.description || '').trim());
+  if (description === null) return;
+
+  const category = window.prompt('Nueva categoría:', String(spot?.category || '').trim());
+  if (category === null) return;
+
+  try {
+    await apiFetch(`/spots/${spotId}`, {
+      method: 'PATCH',
+      body: {
+        title,
+        description,
+        category,
+      },
+    });
+    await spotsStore.reload();
+    showToast('Spot actualizado', 'success');
+  } catch (err) {
+    showToast(err instanceof Error ? err.message : 'No se pudo actualizar el spot', 'error');
+  }
+}
+
 onMounted(() => {
   authStore.init();
   spotsStore.loadSpots();
@@ -501,8 +550,8 @@ onUnmounted(() => {
   <div class="app-shell">
     <header class="topbar">
       <div class="brand-wrap">
-        <div class="brand">📸 SpotMap Vue</div>
-        <span class="brand-subtitle">Experiencia de exploración y publicación de spots</span>
+        <div class="brand">📸 SpotMap</div>
+        <span class="brand-subtitle">Mapa colaborativo para descubrir y compartir spots</span>
       </div>
       <div class="topbar-actions">
         <ModerationPanel v-if="isAuthenticated && isModerator" />
@@ -532,6 +581,7 @@ onUnmounted(() => {
         :has-user-location="hasUserLocation"
         :owner-only="spotsStore.ownerOnly"
         :can-filter-owner="isAuthenticated"
+        :can-manage-spots="isAuthenticated && (isAdmin || isModerator)"
         :page="spotsStore.page"
         :pages="spotsStore.pages"
         :total="spotsStore.total"
@@ -547,6 +597,8 @@ onUnmounted(() => {
         @change-distance="spotsStore.setMaxDistanceKm"
         @use-my-location="handleUseMyLocation"
         @toggle-owner-only="spotsStore.setOwnerOnly"
+        @edit-spot="handleEditSpot"
+        @delete-spot="handleDeleteSpot"
         @clear-filters="spotsStore.resetFilters"
         @prev-page="spotsStore.prevPage"
         @next-page="spotsStore.nextPage"
@@ -565,7 +617,7 @@ onUnmounted(() => {
       <section class="auth-modal" role="dialog" aria-modal="true" :aria-label="authMode === 'register' ? 'Crear cuenta' : 'Iniciar sesión'">
         <h2>{{ authMode === 'register' ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
         <p class="auth-subtitle">
-          {{ authMode === 'register' ? 'Crea cuenta local para empezar a publicar spots.' : 'Usa la misma cuenta que tenías en el frontend anterior.' }}
+          {{ authMode === 'register' ? 'Crea tu cuenta para empezar a publicar spots.' : 'Accede para guardar y gestionar tus spots.' }}
         </p>
 
         <form class="auth-form" @submit.prevent="handleAuthSubmit">

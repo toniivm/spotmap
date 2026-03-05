@@ -78,7 +78,7 @@ async function togglePanel() {
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(0,0,0,.35);
   padding: 10px;
-  z-index: 35;
+  z-index: 2600;
 }
 .mod-state { margin: 0; color: #d1d5db; font-size: 13px; }
 .mod-state--error { color: #fca5a5; }

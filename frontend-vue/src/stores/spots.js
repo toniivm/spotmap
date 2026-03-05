@@ -28,7 +28,7 @@ export const useSpotsStore = defineStore('spots', () => {
   const availableCategories = computed(() => {
     const values = new Set(
       spots.value
-        .map((spot) => spot.category)
+        .map((spot) => String(spot?.category || '').trim())
         .filter(Boolean),
     );
     return Array.from(values).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
@@ -37,7 +37,11 @@ export const useSpotsStore = defineStore('spots', () => {
   const availableTags = computed(() => {
     const values = new Set();
     spots.value.forEach((spot) => {
-      spot.tags.forEach((tag) => values.add(tag));
+      const tags = Array.isArray(spot?.tags) ? spot.tags : [];
+      tags.forEach((tag) => {
+        const clean = String(tag || '').trim();
+        if (clean) values.add(clean);
+      });
     });
     return Array.from(values).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
   });
@@ -59,15 +63,22 @@ export const useSpotsStore = defineStore('spots', () => {
     }
 
     return spots.value.filter((spot) => {
+      const title = String(spot?.title || '').toLowerCase();
+      const description = String(spot?.description || '').toLowerCase();
+      const category = String(spot?.category || '').toLowerCase();
+      const tags = Array.isArray(spot?.tags)
+        ? spot.tags.map((tag) => String(tag || '').toLowerCase()).filter(Boolean)
+        : [];
+
       const matchesSearch =
         !search ||
-        spot.title.toLowerCase().includes(search) ||
-        spot.description.toLowerCase().includes(search) ||
-        spot.category.toLowerCase().includes(search) ||
-        spot.tags.some((tag) => tag.toLowerCase().includes(search));
+        title.includes(search) ||
+        description.includes(search) ||
+        category.includes(search) ||
+        tags.some((tag) => tag.includes(search));
 
-      const matchesCategory = categoryFilter.value === 'all' || spot.category === categoryFilter.value;
-      const matchesTag = tagFilter.value === 'all' || spot.tags.includes(tagFilter.value);
+      const matchesCategory = categoryFilter.value === 'all' || String(spot?.category || '') === categoryFilter.value;
+      const matchesTag = tagFilter.value === 'all' || tags.includes(String(tagFilter.value || '').toLowerCase());
       const matchesDistance = !distanceEnabled.value || !userLocation.value || distanceKm(spot) <= maxDistanceKm.value;
       const matchesOwner = !ownerOnly.value || !currentUserId.value || String(spot.userId ?? '') === String(currentUserId.value);
 
@@ -80,13 +91,6 @@ export const useSpotsStore = defineStore('spots', () => {
       page: String(page.value),
       limit: String(limit.value),
     });
-
-    if (categoryFilter.value !== 'all') {
-      params.set('category', categoryFilter.value);
-    }
-    if (tagFilter.value !== 'all') {
-      params.set('tag', tagFilter.value);
-    }
 
     return params.toString();
   }

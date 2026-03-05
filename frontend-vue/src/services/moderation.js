@@ -9,7 +9,11 @@ export function isModerationUnsupported(errorValue) {
   return message.includes('moderation requires supabase')
     || message.includes('not supported')
     || message.includes('forbidden')
-    || message.includes('unauthorized');
+    || message.includes('unauthorized')
+    || message.includes('42p01')
+    || message.includes('pgrst205')
+    || (message.includes('does not exist') && (message.includes('reports') || message.includes('ratings')))
+    || (message.includes('could not find the table') && (message.includes('reports') || message.includes('ratings')));
 }
 
 export async function fetchPendingSpots({ token, page = 1, limit = 50 } = {}) {

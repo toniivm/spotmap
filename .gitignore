@@ -5,6 +5,8 @@
 # === Credenciales y Configuración Sensible ===
 backend/.env
 backend/.env.local
+frontend-vue/.env
+frontend-vue/.env.local
 frontend/js/supabaseConfig.js
 config/credentials.json
 config/*.key

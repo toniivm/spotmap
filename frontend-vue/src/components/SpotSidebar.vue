@@ -82,6 +82,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  canManageSpots: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const emit = defineEmits([
@@ -95,6 +99,8 @@ const emit = defineEmits([
   'change-distance',
   'use-my-location',
   'toggle-owner-only',
+  'edit-spot',
+  'delete-spot',
   'clear-filters',
   'prev-page',
   'next-page',
@@ -148,6 +154,16 @@ function hasActiveFilters() {
     || props.ownerOnly,
   );
 }
+
+function handleEdit(spot, event) {
+  event?.stopPropagation?.();
+  emit('edit-spot', spot);
+}
+
+function handleDelete(spot, event) {
+  event?.stopPropagation?.();
+  emit('delete-spot', spot);
+}
 </script>
 
 <template>
@@ -155,7 +171,7 @@ function hasActiveFilters() {
     <div class="sidebar-head">
       <div>
         <h2>Explorar Spots</h2>
-        <p class="sidebar-subtitle">Descubre lugares por categoría, etiquetas y distancia</p>
+        <p class="sidebar-subtitle">Filtra y navega spots de forma rápida</p>
       </div>
       <button class="btn-reload" type="button" @click="emit('reload')">Recargar</button>
     </div>
@@ -192,40 +208,6 @@ function hasActiveFilters() {
             <option v-for="tag in availableTags" :key="tag" :value="tag">{{ tag }}</option>
           </select>
         </div>
-      </div>
-
-      <div class="chips" v-if="availableCategories.length > 0">
-        <button
-          class="chip"
-          :class="{ active: categoryFilter === 'all' }"
-          type="button"
-          @click="emit('change-category', 'all')"
-        >Todas</button>
-        <button
-          v-for="category in availableCategories"
-          :key="`cat-chip-${category}`"
-          class="chip"
-          :class="{ active: categoryFilter === category }"
-          type="button"
-          @click="emit('change-category', category)"
-        >{{ category }}</button>
-      </div>
-
-      <div class="chips chips--tags" v-if="availableTags.length > 0">
-        <button
-          class="chip"
-          :class="{ active: tagFilter === 'all' }"
-          type="button"
-          @click="emit('change-tag', 'all')"
-        >Todas tags</button>
-        <button
-          v-for="tag in availableTags"
-          :key="`tag-chip-${tag}`"
-          class="chip"
-          :class="{ active: tagFilter === tag }"
-          type="button"
-          @click="emit('change-tag', tag)"
-        >#{{ tag }}</button>
       </div>
 
       <button class="btn-reload" type="button" @click="emit('use-my-location')">📍 Mi ubicación</button>
@@ -265,7 +247,7 @@ function hasActiveFilters() {
           :class="{ active: viewMode === 'grid' }"
           type="button"
           @click="emit('change-view', 'grid')"
-        >Grid</button>
+        >Tarjetas</button>
       </div>
 
       <div class="quick-actions">
@@ -304,6 +286,10 @@ function hasActiveFilters() {
           <p class="spot-item__description">{{ trimDescription(spot.description) }}</p>
           <div v-if="formatTags(spot.tags).length > 0" class="spot-item__tags">
             <span v-for="tag in formatTags(spot.tags)" :key="`${spot.id}-${tag}`" class="spot-item__tag">#{{ tag }}</span>
+          </div>
+          <div v-if="canManageSpots" class="spot-item__actions">
+            <button class="spot-item__action" type="button" @click="handleEdit(spot, $event)">Editar</button>
+            <button class="spot-item__action spot-item__action--danger" type="button" @click="handleDelete(spot, $event)">Eliminar</button>
           </div>
           <small v-else>sin etiquetas</small>
         </button>

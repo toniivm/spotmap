@@ -67,6 +67,8 @@ textarea:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
+  z-index: 1500;
 }
 
 .brand-wrap {
@@ -148,8 +150,8 @@ textarea:focus-visible {
 .layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
-  min-height: calc(100vh - 66px);
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
+  align-items: start;
   gap: 10px;
   padding: 10px;
 }
@@ -510,6 +512,36 @@ textarea:focus-visible {
   line-height: 1.2;
 }
 
+.spot-item__actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.spot-item__action {
+  border: 1px solid #334155;
+  background: #18263f;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.spot-item__action:hover {
+  background: #233652;
+}
+
+.spot-item__action--danger {
+  border-color: #7f1d1d;
+  background: #3b1f2a;
+  color: #fecaca;
+}
+
+.spot-item__action--danger:hover {
+  background: #4a2230;
+}
+
 .pagination {
   margin-top: auto;
   border-top: 1px solid #22314f;
@@ -553,7 +585,7 @@ textarea:focus-visible {
 }
 
 .map-panel {
-  min-height: 460px;
+  height: clamp(420px, 70vh, 760px);
   border: 1px solid #1f2a44;
   border-radius: 14px;
   overflow: hidden;
@@ -564,7 +596,7 @@ textarea:focus-visible {
 .map-root {
   width: 100%;
   height: 100%;
-  min-height: calc(100vh - 86px);
+  min-height: 100%;
 }
 
 .map-overlay {
@@ -1086,7 +1118,7 @@ textarea:focus-visible {
 
   .layout {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(250px, 44vh) 1fr;
+    grid-template-rows: minmax(280px, 40vh) 1fr;
     gap: 8px;
     padding: 8px;
   }
@@ -1095,8 +1127,12 @@ textarea:focus-visible {
     border-right: 1px solid #1f2a44;
   }
 
+  .map-panel {
+    height: clamp(280px, 42vh, 420px);
+  }
+
   .map-root {
-    min-height: 54vh;
+    min-height: 100%;
   }
 
   .row {
@@ -1136,5 +1172,27 @@ textarea:focus-visible {
   .toast-msg {
     min-width: 0;
     width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .layout {
+    grid-template-rows: minmax(250px, 36vh) 1fr;
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .sidebar {
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .map-panel {
+    height: clamp(250px, 36vh, 360px);
+    border-radius: 12px;
+  }
+
+  .spot-list {
+    max-height: 45vh;
   }
 }
