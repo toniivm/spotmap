@@ -41,3 +41,15 @@ export async function fetchModerationStats({ token } = {}) {
     averageRatingGlobal: Number(data?.averageRatingGlobal || data?.average_rating_global || 0),
   };
 }
+
+export async function editPendingSpot(spotId, formData, { token } = {}) {
+  if (!(formData instanceof FormData)) {
+    throw new Error('Formato invalido para editar spot pendiente');
+  }
+  await apiFetch(`/admin/spots/${spotId}/edit`, {
+    method: 'PATCH',
+    body: formData,
+    token,
+  });
+  return true;
+}

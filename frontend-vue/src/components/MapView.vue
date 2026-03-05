@@ -137,6 +137,24 @@ function renderMarkers() {
   }
 }
 
+function showAllSpots() {
+  const coords = props.spots
+    .map((spot) => getCoords(spot))
+    .filter(Boolean);
+  fitMapToCoords(coords);
+}
+
+function resetView() {
+  if (!map) return;
+  map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+}
+
+function selectedCoordsLabel() {
+  const coords = getCoords(props.selectedSpot);
+  if (!coords) return 'Coordenadas no disponibles';
+  return `${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}`;
+}
+
 onMounted(() => {
   map = L.map(mapRoot.value, {
     zoomControl: true,
@@ -211,6 +229,17 @@ watch(
 
 <template>
   <section class="map-panel">
+    <div class="map-toolbar" role="toolbar" aria-label="Controles de mapa">
+      <button type="button" class="map-tool-btn" @click="showAllSpots">Ver todos</button>
+      <button type="button" class="map-tool-btn" @click="resetView">Reiniciar</button>
+    </div>
+
+    <div v-if="selectedSpot" class="map-selected-card" aria-live="polite">
+      <strong>{{ selectedSpot.title || 'Spot seleccionado' }}</strong>
+      <span>{{ selectedSpot.category || 'sin categoría' }}</span>
+      <small>{{ selectedCoordsLabel() }}</small>
+    </div>
+
     <div ref="mapRoot" class="map-root" aria-label="Mapa de spots"></div>
     <div v-if="loading" class="map-overlay">Cargando mapa y marcadores…</div>
     <div v-else-if="error" class="map-overlay map-overlay--error">{{ error }}</div>

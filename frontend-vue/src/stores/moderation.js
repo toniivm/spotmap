@@ -2,6 +2,7 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import {
   approvePendingSpot,
+  editPendingSpot,
   fetchModerationStats,
   fetchPendingSpots,
   isModerationUnsupported,
@@ -111,6 +112,25 @@ export const useModerationStore = defineStore('moderation', () => {
     }
   }
 
+  async function updatePending(spotId, formData) {
+    const token = getStoredAccessToken();
+    if (!token || !spotId) return;
+
+    actionLoading.value = true;
+    error.value = '';
+    try {
+      await editPendingSpot(spotId, formData, { token });
+      await loadPending();
+    } catch (err) {
+      if (!handleUnsupported(err)) {
+        error.value = err instanceof Error ? err.message : 'No se pudo editar el spot pendiente';
+      }
+      throw err;
+    } finally {
+      actionLoading.value = false;
+    }
+  }
+
   return {
     pendingSpots,
     totalPending,
@@ -124,5 +144,6 @@ export const useModerationStore = defineStore('moderation', () => {
     loadPending,
     approve,
     reject,
+    updatePending,
   };
 });

@@ -1,6 +1,16 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { getConfiguredOAuthProviders, loadSession, signIn, signOut, signUp, startOAuth } from '../services/auth';
+import {
+  getConfiguredOAuthProviders,
+  loadSession,
+  requestPasswordReset,
+  resendVerification,
+  signIn,
+  signOut,
+  signUp,
+  startOAuth,
+  updatePassword,
+} from '../services/auth';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null);
@@ -83,6 +93,46 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function sendPasswordReset(email) {
+    loading.value = true;
+    error.value = '';
+    try {
+      await requestPasswordReset(email);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'No se pudo enviar recuperación';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function sendVerificationEmail(email) {
+    loading.value = true;
+    error.value = '';
+    try {
+      await resendVerification(email);
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'No se pudo reenviar verificación';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  async function updatePasswordFromRecovery(newPassword) {
+    loading.value = true;
+    error.value = '';
+    try {
+      await updatePassword(newPassword);
+      user.value = await loadSession();
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'No se pudo actualizar la contrasena';
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  }
+
   return {
     user,
     loading,
@@ -98,6 +148,9 @@ export const useAuthStore = defineStore('auth', () => {
     init,
     login,
     register,
+    sendPasswordReset,
+    sendVerificationEmail,
+    updatePasswordFromRecovery,
     loginWithOAuth,
     logout,
   };

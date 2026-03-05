@@ -58,6 +58,16 @@ class Auth
             }
         }
 
+        // Break-glass admin override by explicit email allowlist.
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        $adminEmails = array_values(array_filter(array_map(
+            static fn ($value) => strtolower(trim((string)$value)),
+            explode(',', (string)Config::get('ADMIN_EMAILS', ''))
+        )));
+        if ($email !== '' && in_array($email, $adminEmails, true)) {
+            $resolvedRole = 'admin';
+        }
+
         $user['role'] = $resolvedRole ?? \SpotMap\Constants::DEFAULT_ROLE;
         
         return $user;

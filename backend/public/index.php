@@ -48,6 +48,10 @@ use SpotMap\Controllers\AccountController;
 // Inicializar configuración
 Config::load();
 
+if (!headers_sent()) {
+    header('X-Request-ID: ' . Logger::getRequestId());
+}
+
 // Security headers (CSP, HSTS, etc)
 Security::setSecurityHeaders();
 
@@ -55,10 +59,18 @@ Security::setSecurityHeaders();
 $allowedOrigins = array_map('trim', explode(',', Config::get('CORS_ORIGINS', 'http://localhost,http://localhost:3000')));
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 $allowAllOrigins = in_array('*', $allowedOrigins, true);
+$isProd = Config::isProd();
+
+// In production, wildcard origins are not accepted.
+if ($isProd && $allowAllOrigins) {
+    $allowAllOrigins = false;
+    Logger::warn('CORS wildcard disabled in production');
+}
+
 $isAllowedOrigin = $allowAllOrigins || in_array($origin, $allowedOrigins, true);
 
 if ($isAllowedOrigin) {
-    if ($allowAllOrigins && $origin === '') {
+    if (!$isProd && $allowAllOrigins && $origin === '') {
         header('Access-Control-Allow-Origin: *');
     } else {
         header("Access-Control-Allow-Origin: $origin");
@@ -67,8 +79,8 @@ if ($isAllowedOrigin) {
     header('Vary: Origin');
 }
 header("Access-Control-Allow-Methods: GET, POST, DELETE, OPTIONS, PUT");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Access-Control-Expose-Headers: Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-Request-ID, X-Status-Token, X-Diagnostic-Token");
+header("Access-Control-Expose-Headers: Authorization, X-Request-ID");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
@@ -115,6 +127,24 @@ Metrics::inc('requests_total');
 
 // Endpoint rápido para comprobar conexión a la base de datos
 if ($uri === '/ping-db') {
+    if (!Config::getBool('DIAGNOSTICS_ENABLED', false)) {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Route not found']);
+        exit;
+    }
+
+    $diagnosticToken = trim((string)Config::get('DIAGNOSTIC_TOKEN', ''));
+    if ($diagnosticToken !== '') {
+        $provided = trim((string)($_SERVER['HTTP_X_DIAGNOSTIC_TOKEN'] ?? ''));
+        if ($provided === '' || !hash_equals($diagnosticToken, $provided)) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Forbidden']);
+            exit;
+        }
+    }
+
     try {
         $pdo = Database::pdo();
         $stmt = $pdo->query('SELECT 1');
@@ -130,6 +160,24 @@ if ($uri === '/ping-db') {
 }
 
 if ($uri === '/db-info') {
+    if (!Config::getBool('DIAGNOSTICS_ENABLED', false)) {
+        http_response_code(404);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Route not found']);
+        exit;
+    }
+
+    $diagnosticToken = trim((string)Config::get('DIAGNOSTIC_TOKEN', ''));
+    if ($diagnosticToken !== '') {
+        $provided = trim((string)($_SERVER['HTTP_X_DIAGNOSTIC_TOKEN'] ?? ''));
+        if ($provided === '' || !hash_equals($diagnosticToken, $provided)) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Forbidden']);
+            exit;
+        }
+    }
+
     try {
         $pdo = Database::pdo();
         $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_NUM);
@@ -257,7 +305,20 @@ if (isset($parts[0]) && $parts[0] === 'spots') {
 // Endpoint: Estado de salud de la API
 // Health / status endpoint (aceptar variantes con prefijos)
 if ($uri === '/api/status' || str_ends_with($uri, '/api/status')) {
+    $expectedStatusToken = trim((string)Config::get('STATUS_TOKEN', ''));
+    if ($expectedStatusToken !== '') {
+        $providedStatusToken = trim((string)($_SERVER['HTTP_X_STATUS_TOKEN'] ?? ''));
+        if ($providedStatusToken === '' || !hash_equals($expectedStatusToken, $providedStatusToken)) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'forbidden']);
+            exit;
+        }
+    }
+
     try {
+        $statusVerbose = Config::getBool('STATUS_VERBOSE', false);
+        $dbMode = DatabaseAdapter::useSupabase() ? 'supabase' : 'local';
         if (DatabaseAdapter::useSupabase()) {
             $dbConnected = true; // Supabase credenciales cargadas correctamente
             $connectionInfo = [
@@ -272,31 +333,40 @@ if ($uri === '/api/status' || str_ends_with($uri, '/api/status')) {
         
         http_response_code($dbConnected ? 200 : 503);
         header('Content-Type: application/json');
+        header('Cache-Control: no-store');
         echo json_encode([
             'status' => $status,
             'api_version' => Config::get('API_VERSION', '1.0.0'),
             'environment' => Config::get('ENV', 'development'),
             'timestamp' => date('c'),
             'database' => [
-                'mode' => DatabaseAdapter::useSupabase() ? 'supabase' : 'local',
+                'mode' => $dbMode,
                 'connected' => $dbConnected,
-                'host' => $connectionInfo['host'] ?? null,
+                'host' => $statusVerbose ? ($connectionInfo['host'] ?? null) : null,
                 'database' => $connectionInfo['database'] ?? null,
             ],
-            'config' => Config::getAll(),
+            // Expose only non-sensitive operational flags.
+            'features' => [
+                'ownership_enabled' => Config::getBool('OWNERSHIP_ENABLED', false),
+                'metrics_enabled' => Config::getBool('METRICS_ENABLED', false),
+                'rate_limit_enabled' => Config::getBool('RATE_LIMIT_ENABLED', false),
+            ],
         ]);
     } catch (\Exception $e) {
         Logger::exception($e, 'Status endpoint error');
         http_response_code(500);
         header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'error' => $e->getMessage()]);
+        echo json_encode([
+            'status' => 'error',
+            'error' => Config::isDebug() ? $e->getMessage() : 'Internal status error',
+        ]);
     }
     exit;
 }
 
 // Metrics endpoint (simple JSON) if enabled
 if ($uri === '/api/metrics') {
-    if (!Config::get('METRICS_ENABLED')) {
+    if (!Config::getBool('METRICS_ENABLED', false)) {
         http_response_code(404);
         header('Content-Type: application/json');
         echo json_encode(['error' => 'Metrics disabled']);
@@ -314,7 +384,7 @@ if ($uri === '/api/metrics') {
 
 // Prometheus plaintext metrics
 if ($uri === '/api/metrics/prometheus') {
-    if (!Config::get('METRICS_ENABLED')) {
+    if (!Config::getBool('METRICS_ENABLED', false)) {
         http_response_code(404);
         header('Content-Type: text/plain');
         echo "metrics_disabled 1";

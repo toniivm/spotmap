@@ -15,7 +15,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost/https-github.com-antonio-valero-daw2personal/Proyecto/spotMap/backend/public",
+      "url": "http://127.0.0.1:8000",
       "description": "Desarrollo local (XAMPP)"
     },
     {
@@ -514,7 +514,7 @@
         }
       }
     },
-    "/notifications": {
+    "/api/notifications": {
       "get": {
         "tags": ["Notifications"],
         "summary": "Listar notificaciones del usuario",
@@ -563,7 +563,7 @@
         }
       }
     },
-    "/notifications/unread-count": {
+    "/api/notifications/unread-count": {
       "get": {
         "tags": ["Notifications"],
         "summary": "Contador de no leídas",
@@ -582,7 +582,7 @@
         }
       }
     },
-    "/notifications/{id}/read": {
+    "/api/notifications/{id}/read": {
       "patch": {
         "tags": ["Notifications"],
         "summary": "Marcar notificación como leída",
@@ -614,7 +614,7 @@
         }
       }
     },
-    "/notifications/mark-all-read": {
+    "/api/notifications/mark-all-read": {
       "post": {
         "tags": ["Notifications"],
         "summary": "Marcar todas como leídas",
@@ -633,7 +633,7 @@
         }
       }
     },
-    "/notifications/{id}": {
+    "/api/notifications/{id}": {
       "delete": {
         "tags": ["Notifications"],
         "summary": "Eliminar notificación",
@@ -668,14 +668,82 @@
     "/api/status": {
       "get": {
         "tags": ["System"],
-        "summary": "Health check de la API",
-        "description": "Estado general de API, base de datos y entorno.",
+        "summary": "Health check seguro de la API",
+        "description": "Estado general de API y conectividad de base de datos. Puede requerir token X-Status-Token cuando STATUS_TOKEN está configurado.",
+        "parameters": [
+          {
+            "name": "X-Status-Token",
+            "in": "header",
+            "required": false,
+            "description": "Token opcional de monitorización para proteger /api/status",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": "API saludable"
+            "description": "API saludable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
           },
           "503": {
-            "description": "API degradada"
+            "description": "API degradada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "$ref": "#/components/responses/ForbiddenError"
+          },
+          "500": {
+            "$ref": "#/components/responses/ErrorResponse"
+          }
+        }
+      }
+    },
+    "/api/metrics": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Métricas JSON",
+        "description": "Devuelve métricas agregadas para observabilidad. Requiere METRICS_ENABLED=true.",
+        "responses": {
+          "200": {
+            "description": "Métricas en JSON"
+          },
+          "404": {
+            "description": "Métricas deshabilitadas"
+          }
+        }
+      }
+    },
+    "/api/metrics/prometheus": {
+      "get": {
+        "tags": ["System"],
+        "summary": "Métricas Prometheus",
+        "description": "Expone métricas en formato text/plain para scraping de Prometheus. Requiere METRICS_ENABLED=true.",
+        "responses": {
+          "200": {
+            "description": "Métricas en formato Prometheus",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Métricas deshabilitadas"
           }
         }
       }
@@ -918,6 +986,42 @@
               "message": {
                 "type": "string"
               }
+            }
+          }
+        }
+      },
+      "StatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "degraded", "error"]
+          },
+          "api_version": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "database": {
+            "type": "object",
+            "properties": {
+              "mode": { "type": "string" },
+              "connected": { "type": "boolean" },
+              "host": { "type": ["string", "null"] },
+              "database": { "type": "string" }
+            }
+          },
+          "features": {
+            "type": "object",
+            "properties": {
+              "ownership_enabled": { "type": "boolean" },
+              "metrics_enabled": { "type": "boolean" },
+              "rate_limit_enabled": { "type": "boolean" }
             }
           }
         }

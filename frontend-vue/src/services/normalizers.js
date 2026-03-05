@@ -20,8 +20,10 @@ function normalizeTags(tags) {
 }
 
 export function normalizeSpot(raw = {}) {
-  const lat = Number(raw.lat);
-  const lng = Number(raw.lng);
+  const hasLat = raw.lat !== null && raw.lat !== undefined && raw.lat !== '';
+  const hasLng = raw.lng !== null && raw.lng !== undefined && raw.lng !== '';
+  const lat = hasLat ? Number(raw.lat) : NaN;
+  const lng = hasLng ? Number(raw.lng) : NaN;
   return {
     id: raw.id,
     title: String(raw.title || 'Sin título'),

@@ -25,6 +25,7 @@ class Config
         $defaults = [
             'ENV' => 'development',
             'DEBUG' => true,
+            'STATUS_VERBOSE' => false,
             'DB_HOST' => '127.0.0.1',
             'DB_PORT' => '3306',
             'DB_DATABASE' => 'spotmap',
@@ -47,6 +48,8 @@ class Config
             // Ownership & Metrics
             'OWNERSHIP_ENABLED' => false,
             'METRICS_ENABLED' => false,
+            'DIAGNOSTICS_ENABLED' => false,
+            'ADMIN_EMAILS' => '',
         ];
 
         foreach ($defaults as $key => $defaultValue) {
@@ -136,9 +139,22 @@ class Config
     public static function getAll(): array
     {
         if (!self::$loaded) self::load();
-        // No devolver valores sensibles (passwords) por seguridad
+        // No devolver valores sensibles por seguridad
         $safe = self::$config;
         $safe['DB_PASSWORD'] = '***';
+        if (isset($safe['SUPABASE_ANON_KEY']) && $safe['SUPABASE_ANON_KEY'] !== '') {
+            $safe['SUPABASE_ANON_KEY'] = '***';
+        }
+        if (isset($safe['SUPABASE_SERVICE_KEY']) && $safe['SUPABASE_SERVICE_KEY'] !== '') {
+            $safe['SUPABASE_SERVICE_KEY'] = '***';
+        }
         return $safe;
+    }
+
+    public static function getBool(string $key, bool $default = false): bool
+    {
+        $value = self::get($key, $default);
+        $parsed = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        return $parsed ?? $default;
     }
 }

@@ -168,12 +168,8 @@
 
             window.ui = ui;
             
-            // Add authorization header automatically if token is in localStorage
-            const token = localStorage.getItem('supabaseToken');
-            if (token) {
-                ui.preauthorizeApiKey('BearerAuth', token);
-                console.log('🔑 Token de Supabase detectado y configurado automáticamente');
-            }
+            // Security: avoid auto-injecting tokens from browser storage.
+            // Use Swagger Authorize button explicitly for each session.
         };
     </script>
 </body>

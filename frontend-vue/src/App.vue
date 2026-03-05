@@ -22,11 +22,15 @@ const authMode = ref('login');
 const registerName = ref('');
 const loginEmail = ref('');
 const loginPassword = ref('');
+const recoveryPassword = ref('');
+const recoveryPasswordConfirm = ref('');
 const authError = ref('');
+const authStatusMessage = ref('');
 const authFieldErrors = ref({
   name: '',
   email: '',
   password: '',
+  passwordConfirm: '',
 });
 const showCreateSpotModal = ref(false);
 const createSpotError = ref('');
@@ -40,6 +44,9 @@ const creatingSpot = ref(false);
 const locatingSpotCoords = ref(false);
 const showCreateSpotMapPicker = ref(false);
 const createSpotMapRoot = ref(null);
+const mobileSidebarOpen = ref(false);
+const mobileMapFocus = ref(false);
+const isCompactViewport = ref(false);
 const uiToast = ref({
   visible: false,
   type: 'info',
@@ -67,6 +74,9 @@ const currentUsername = computed(() => authStore.username || 'Usuario');
 const currentRoleLabel = computed(() => authStore.roleLabel || 'Usuario');
 const oauthProviders = computed(() => authStore.oauthProviders || []);
 const hasUserLocation = computed(() => !!spotsStore.userLocation);
+const totalVisibleSpots = computed(() => spotsStore.filteredSpots.length || 0);
+const totalCategories = computed(() => spotsStore.availableCategories.length || 0);
+const totalTags = computed(() => spotsStore.availableTags.length || 0);
 
 const oauthProviderLabels = {
   google: 'Google',
@@ -107,11 +117,41 @@ function handleSelectSpot(spotId) {
   selectedSpotId.value = spotId;
 }
 
+function handleSelectSpotFromSidebar(spotId) {
+  selectedSpotId.value = spotId;
+  if (isCompactViewport.value) {
+    mobileSidebarOpen.value = false;
+  }
+}
+
+function syncViewportState() {
+  isCompactViewport.value = window.matchMedia('(max-width: 991px)').matches;
+  if (!isCompactViewport.value) {
+    mobileSidebarOpen.value = false;
+    mobileMapFocus.value = false;
+  }
+}
+
+function toggleMobileSidebar() {
+  mobileSidebarOpen.value = !mobileSidebarOpen.value;
+  if (mobileSidebarOpen.value) {
+    mobileMapFocus.value = false;
+  }
+}
+
+function toggleMobileMapFocus() {
+  mobileMapFocus.value = !mobileMapFocus.value;
+  if (mobileMapFocus.value) {
+    mobileSidebarOpen.value = false;
+  }
+}
+
 function clearAuthValidationErrors() {
   authFieldErrors.value = {
     name: '',
     email: '',
     password: '',
+    passwordConfirm: '',
   };
 }
 
@@ -146,13 +186,18 @@ function validateAuthForm() {
   clearAuthValidationErrors();
 
   const email = String(loginEmail.value || '').trim();
-  const password = String(loginPassword.value || '');
+  const password = authMode.value === 'reset'
+    ? String(recoveryPassword.value || '')
+    : String(loginPassword.value || '');
   const name = String(registerName.value || '').trim();
+  const passwordConfirm = String(recoveryPasswordConfirm.value || '');
 
-  if (!email) {
-    authFieldErrors.value.email = 'El email es obligatorio';
-  } else if (!isValidEmail(email)) {
-    authFieldErrors.value.email = 'El email no tiene formato válido';
+  if (authMode.value !== 'reset') {
+    if (!email) {
+      authFieldErrors.value.email = 'El email es obligatorio';
+    } else if (!isValidEmail(email)) {
+      authFieldErrors.value.email = 'El email no tiene formato válido';
+    }
   }
 
   if (!password) {
@@ -169,7 +214,30 @@ function validateAuthForm() {
     }
   }
 
-  return !authFieldErrors.value.name && !authFieldErrors.value.email && !authFieldErrors.value.password;
+  if (authMode.value === 'reset') {
+    if (!passwordConfirm) {
+      authFieldErrors.value.passwordConfirm = 'Confirma la contrasena';
+    } else if (password !== passwordConfirm) {
+      authFieldErrors.value.passwordConfirm = 'Las contrasenas no coinciden';
+    }
+  }
+
+  return !authFieldErrors.value.name
+    && !authFieldErrors.value.email
+    && !authFieldErrors.value.password
+    && !authFieldErrors.value.passwordConfirm;
+}
+
+function isRecoveryCallback() {
+  const rawHash = String(window.location.hash || '').replace(/^#/, '');
+  if (!rawHash) return false;
+  const params = new URLSearchParams(rawHash);
+  return String(params.get('type') || '').toLowerCase() === 'recovery';
+}
+
+function clearRecoveryHash() {
+  if (!window.location.hash) return;
+  window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
 }
 
 function validateCreateSpotForm() {
@@ -210,6 +278,7 @@ function validateCreateSpotForm() {
 function openLoginModal() {
   authMode.value = 'login';
   authError.value = '';
+  authStatusMessage.value = '';
   clearAuthValidationErrors();
   showLoginModal.value = true;
 }
@@ -217,19 +286,26 @@ function openLoginModal() {
 function closeLoginModal() {
   showLoginModal.value = false;
   authError.value = '';
+  authStatusMessage.value = '';
   loginPassword.value = '';
+  recoveryPassword.value = '';
+  recoveryPasswordConfirm.value = '';
   clearAuthValidationErrors();
 }
 
 function setAuthMode(mode) {
   authMode.value = mode;
   authError.value = '';
+  authStatusMessage.value = '';
   loginPassword.value = '';
+  recoveryPassword.value = '';
+  recoveryPasswordConfirm.value = '';
   clearAuthValidationErrors();
 }
 
 async function handleAuthSubmit() {
   authError.value = '';
+  authStatusMessage.value = '';
   if (!validateAuthForm()) {
     authError.value = 'Revisa los campos obligatorios';
     return;
@@ -238,6 +314,15 @@ async function handleAuthSubmit() {
   try {
     if (authMode.value === 'register') {
       await authStore.register(registerName.value.trim(), loginEmail.value, loginPassword.value);
+    } else if (authMode.value === 'reset') {
+      await authStore.updatePasswordFromRecovery(recoveryPassword.value);
+      authStatusMessage.value = 'Contrasena actualizada. Ya puedes iniciar sesion.';
+      showToast(authStatusMessage.value, 'success');
+      setAuthMode('login');
+      recoveryPassword.value = '';
+      recoveryPasswordConfirm.value = '';
+      clearRecoveryHash();
+      return;
     } else {
       await authStore.login(loginEmail.value, loginPassword.value);
     }
@@ -245,11 +330,59 @@ async function handleAuthSubmit() {
     loginPassword.value = '';
     showToast(authMode.value === 'register' ? 'Cuenta creada correctamente' : 'Sesión iniciada', 'success');
   } catch (err) {
-    authError.value = err instanceof Error
+    const message = err instanceof Error
       ? err.message
       : authMode.value === 'register'
         ? 'No se pudo crear la cuenta'
         : 'No se pudo iniciar sesión';
+
+    if (authMode.value === 'register' && message.toLowerCase().includes('revisa tu email')) {
+      authStatusMessage.value = message;
+      authMode.value = 'login';
+      loginPassword.value = '';
+      showToast('Cuenta creada. Revisa tu correo para verificarla.', 'info');
+      return;
+    }
+
+    authError.value = message;
+    showToast(authError.value, 'error');
+  }
+}
+
+async function handleForgotPassword() {
+  authError.value = '';
+  authStatusMessage.value = '';
+  const email = String(loginEmail.value || '').trim();
+  if (!isValidEmail(email)) {
+    authError.value = 'Escribe un email valido para recuperar la cuenta';
+    return;
+  }
+
+  try {
+    await authStore.sendPasswordReset(email);
+    authStatusMessage.value = 'Te hemos enviado un correo para restablecer la contrasena.';
+    showToast(authStatusMessage.value, 'success');
+  } catch (err) {
+    authError.value = err instanceof Error ? err.message : 'No se pudo enviar la recuperacion';
+    showToast(authError.value, 'error');
+  }
+}
+
+async function handleResendVerification() {
+  authError.value = '';
+  authStatusMessage.value = '';
+  const email = String(loginEmail.value || '').trim();
+  if (!isValidEmail(email)) {
+    authError.value = 'Escribe un email valido para reenviar la verificacion';
+    return;
+  }
+
+  try {
+    await authStore.sendVerificationEmail(email);
+    authStatusMessage.value = 'Correo de verificacion reenviado. Revisa tu bandeja.';
+    showToast(authStatusMessage.value, 'success');
+  } catch (err) {
+    authError.value = err instanceof Error ? err.message : 'No se pudo reenviar la verificacion';
     showToast(authError.value, 'error');
   }
 }
@@ -452,10 +585,18 @@ async function handleCreateSpot() {
     if (newSpot.value.image1) form.append('image1', newSpot.value.image1);
     if (newSpot.value.image2) form.append('image2', newSpot.value.image2);
 
-    await apiFetch('/spots', { method: 'POST', body: form, token });
+    const createdPayload = await apiFetch('/spots', { method: 'POST', body: form, token });
+    const createdSpot = createdPayload?.data ?? createdPayload ?? {};
     await spotsStore.reload();
+    if (notificationsStore.supported) {
+      await notificationsStore.load();
+    }
     closeCreateSpotModal();
-    showToast('Spot creado correctamente', 'success');
+    if (String(createdSpot.status || '') === 'pending') {
+      showToast('Spot enviado: esta siendo revisado por moderacion.', 'info');
+    } else {
+      showToast('Spot creado correctamente', 'success');
+    }
   } catch (err) {
     createSpotError.value = err instanceof Error ? err.message : 'No se pudo crear el spot';
     showToast(createSpotError.value, 'error');
@@ -533,11 +674,22 @@ async function handleEditSpot(spot) {
 }
 
 onMounted(() => {
+  syncViewportState();
+  window.addEventListener('resize', syncViewportState, { passive: true });
   authStore.init();
   spotsStore.loadSpots();
+
+  if (isRecoveryCallback()) {
+    authMode.value = 'reset';
+    showLoginModal.value = true;
+    authStatusMessage.value = 'Define una nueva contrasena para tu cuenta.';
+    authError.value = '';
+    clearAuthValidationErrors();
+  }
 });
 
 onUnmounted(() => {
+  window.removeEventListener('resize', syncViewportState);
   destroyCreateSpotMap();
   notificationsStore.stopPolling();
   if (toastTimer) {
@@ -547,13 +699,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'app-shell--map-focus': mobileMapFocus }">
     <header class="topbar">
       <div class="brand-wrap">
         <div class="brand">📸 SpotMap</div>
         <span class="brand-subtitle">Mapa colaborativo para descubrir y compartir spots</span>
       </div>
       <div class="topbar-actions">
+        <button class="topbar-btn only-mobile" type="button" @click="toggleMobileSidebar">
+          {{ mobileSidebarOpen ? 'Cerrar filtros' : 'Filtros' }}
+        </button>
+        <button class="topbar-btn only-mobile" type="button" @click="toggleMobileMapFocus">
+          {{ mobileMapFocus ? 'Vista normal' : 'Solo mapa' }}
+        </button>
         <ModerationPanel v-if="isAuthenticated && isModerator" />
         <button v-if="isAuthenticated" class="topbar-btn topbar-btn--primary" type="button" @click="openCreateSpotModal">+ Añadir Spot</button>
         <NotificationsDropdown v-if="isAuthenticated" />
@@ -564,60 +722,87 @@ onUnmounted(() => {
       </div>
     </header>
 
-    <main class="layout">
-      <SpotSidebar
-        :spots="spotsStore.filteredSpots"
-        :loading="spotsStore.loading"
-        :error="spotsStore.error"
-        :selected-id="selectedSpotId"
-        :view-mode="spotsStore.viewMode"
-        :search-query="spotsStore.searchQuery"
-        :category-filter="spotsStore.categoryFilter"
-        :tag-filter="spotsStore.tagFilter"
-        :available-categories="spotsStore.availableCategories"
-        :available-tags="spotsStore.availableTags"
-        :distance-enabled="spotsStore.distanceEnabled"
-        :max-distance-km="spotsStore.maxDistanceKm"
-        :has-user-location="hasUserLocation"
-        :owner-only="spotsStore.ownerOnly"
-        :can-filter-owner="isAuthenticated"
-        :can-manage-spots="isAuthenticated && (isAdmin || isModerator)"
-        :page="spotsStore.page"
-        :pages="spotsStore.pages"
-        :total="spotsStore.total"
-        :has-prev="spotsStore.hasPrev"
-        :has-next="spotsStore.hasNext"
-        @select-spot="handleSelectSpot"
-        @reload="spotsStore.reload"
-        @change-view="spotsStore.setViewMode"
-        @change-search="spotsStore.setSearchQuery"
-        @change-category="spotsStore.setCategoryFilter"
-        @change-tag="spotsStore.setTagFilter"
-        @toggle-distance="spotsStore.setDistanceEnabled"
-        @change-distance="spotsStore.setMaxDistanceKm"
-        @use-my-location="handleUseMyLocation"
-        @toggle-owner-only="spotsStore.setOwnerOnly"
-        @edit-spot="handleEditSpot"
-        @delete-spot="handleDeleteSpot"
-        @clear-filters="spotsStore.resetFilters"
-        @prev-page="spotsStore.prevPage"
-        @next-page="spotsStore.nextPage"
-      />
+    <section class="kpi-strip" aria-label="Resumen rápido">
+      <article class="kpi-card">
+        <span>Spots visibles</span>
+        <strong>{{ totalVisibleSpots }}</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Categorías activas</span>
+        <strong>{{ totalCategories }}</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Etiquetas detectadas</span>
+        <strong>{{ totalTags }}</strong>
+      </article>
+    </section>
 
-      <MapView
-        :spots="spotsStore.filteredSpots"
-        :loading="spotsStore.loading"
-        :error="spotsStore.error"
-        :selected-spot="selectedSpot"
-        @select-spot="handleSelectSpot"
-      />
+    <main class="layout" :class="{ 'layout--sidebar-open': mobileSidebarOpen, 'layout--map-focus': mobileMapFocus }">
+      <button
+        v-if="isCompactViewport && mobileSidebarOpen"
+        type="button"
+        class="sidebar-backdrop"
+        aria-label="Cerrar panel de filtros"
+        @click="mobileSidebarOpen = false"
+      ></button>
+
+      <div class="sidebar-shell" :class="{ 'sidebar-shell--open': mobileSidebarOpen }">
+        <SpotSidebar
+          :spots="spotsStore.filteredSpots"
+          :loading="spotsStore.loading"
+          :error="spotsStore.error"
+          :selected-id="selectedSpotId"
+          :view-mode="spotsStore.viewMode"
+          :search-query="spotsStore.searchQuery"
+          :category-filter="spotsStore.categoryFilter"
+          :tag-filter="spotsStore.tagFilter"
+          :available-categories="spotsStore.availableCategories"
+          :available-tags="spotsStore.availableTags"
+          :distance-enabled="spotsStore.distanceEnabled"
+          :max-distance-km="spotsStore.maxDistanceKm"
+          :has-user-location="hasUserLocation"
+          :owner-only="spotsStore.ownerOnly"
+          :can-filter-owner="isAuthenticated"
+          :can-manage-spots="isAuthenticated && (isAdmin || isModerator)"
+          :page="spotsStore.page"
+          :pages="spotsStore.pages"
+          :total="spotsStore.total"
+          :has-prev="spotsStore.hasPrev"
+          :has-next="spotsStore.hasNext"
+          @select-spot="handleSelectSpotFromSidebar"
+          @reload="spotsStore.reload"
+          @change-view="spotsStore.setViewMode"
+          @change-search="spotsStore.setSearchQuery"
+          @change-category="spotsStore.setCategoryFilter"
+          @change-tag="spotsStore.setTagFilter"
+          @toggle-distance="spotsStore.setDistanceEnabled"
+          @change-distance="spotsStore.setMaxDistanceKm"
+          @use-my-location="handleUseMyLocation"
+          @toggle-owner-only="spotsStore.setOwnerOnly"
+          @edit-spot="handleEditSpot"
+          @delete-spot="handleDeleteSpot"
+          @clear-filters="spotsStore.resetFilters"
+          @prev-page="spotsStore.prevPage"
+          @next-page="spotsStore.nextPage"
+        />
+      </div>
+
+      <div class="map-shell">
+        <MapView
+          :spots="spotsStore.filteredSpots"
+          :loading="spotsStore.loading"
+          :error="spotsStore.error"
+          :selected-spot="selectedSpot"
+          @select-spot="handleSelectSpot"
+        />
+      </div>
     </main>
 
     <div v-if="showLoginModal" class="auth-modal-backdrop" @click.self="closeLoginModal">
-      <section class="auth-modal" role="dialog" aria-modal="true" :aria-label="authMode === 'register' ? 'Crear cuenta' : 'Iniciar sesión'">
-        <h2>{{ authMode === 'register' ? 'Crear cuenta' : 'Iniciar sesión' }}</h2>
+      <section class="auth-modal" role="dialog" aria-modal="true" :aria-label="authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Actualizar contrasena' : 'Iniciar sesión')">
+        <h2>{{ authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Actualizar contrasena' : 'Iniciar sesión') }}</h2>
         <p class="auth-subtitle">
-          {{ authMode === 'register' ? 'Crea tu cuenta para empezar a publicar spots.' : 'Accede para guardar y gestionar tus spots.' }}
+          {{ authMode === 'register' ? 'Crea tu cuenta para empezar a publicar spots.' : (authMode === 'reset' ? 'Introduce una nueva contrasena para recuperar tu cuenta.' : 'Accede para guardar y gestionar tus spots.') }}
         </p>
 
         <form class="auth-form" @submit.prevent="handleAuthSubmit">
@@ -627,20 +812,44 @@ onUnmounted(() => {
             <small v-if="authFieldErrors.name" class="field-error">{{ authFieldErrors.name }}</small>
           </template>
 
-          <label for="login-email" class="auth-label">Email</label>
-          <input id="login-email" v-model="loginEmail" :class="['input', { 'input--error': authFieldErrors.email }]" type="email" autocomplete="email" placeholder="tu@email.com">
-          <small v-if="authFieldErrors.email" class="field-error">{{ authFieldErrors.email }}</small>
+          <template v-if="authMode !== 'reset'">
+            <label for="login-email" class="auth-label">Email</label>
+            <input id="login-email" v-model="loginEmail" :class="['input', { 'input--error': authFieldErrors.email }]" type="email" autocomplete="email" placeholder="tu@email.com">
+            <small v-if="authFieldErrors.email" class="field-error">{{ authFieldErrors.email }}</small>
 
-          <label for="login-password" class="auth-label">Contraseña</label>
-          <input id="login-password" v-model="loginPassword" :class="['input', { 'input--error': authFieldErrors.password }]" type="password" :autocomplete="authMode === 'register' ? 'new-password' : 'current-password'" placeholder="******">
-          <small v-if="authFieldErrors.password" class="field-error">{{ authFieldErrors.password }}</small>
+            <label for="login-password" class="auth-label">Contraseña</label>
+            <input id="login-password" v-model="loginPassword" :class="['input', { 'input--error': authFieldErrors.password }]" type="password" :autocomplete="authMode === 'register' ? 'new-password' : 'current-password'" placeholder="******">
+            <small v-if="authFieldErrors.password" class="field-error">{{ authFieldErrors.password }}</small>
+          </template>
+
+          <template v-else>
+            <label for="recovery-password" class="auth-label">Nueva contrasena</label>
+            <input id="recovery-password" v-model="recoveryPassword" :class="['input', { 'input--error': authFieldErrors.password }]" type="password" autocomplete="new-password" placeholder="******">
+            <small v-if="authFieldErrors.password" class="field-error">{{ authFieldErrors.password }}</small>
+
+            <label for="recovery-password-confirm" class="auth-label">Confirmar contrasena</label>
+            <input id="recovery-password-confirm" v-model="recoveryPasswordConfirm" :class="['input', { 'input--error': authFieldErrors.passwordConfirm }]" type="password" autocomplete="new-password" placeholder="******">
+            <small v-if="authFieldErrors.passwordConfirm" class="field-error">{{ authFieldErrors.passwordConfirm }}</small>
+          </template>
+
+          <div v-if="authMode === 'login'" class="auth-inline-actions">
+            <button class="auth-switch" type="button" @click="handleForgotPassword">Olvide mi contrasena</button>
+            <button class="auth-switch" type="button" @click="handleResendVerification">Reenviar verificacion</button>
+          </div>
 
           <p v-if="authError" class="auth-error">{{ authError }}</p>
-          <button class="auth-switch" type="button" @click="setAuthMode(authMode === 'register' ? 'login' : 'register')">
-            {{ authMode === 'register' ? 'Ya tengo cuenta, quiero iniciar sesión' : 'No tengo cuenta, quiero registrarme' }}
+          <p v-if="authStatusMessage" class="auth-success">{{ authStatusMessage }}</p>
+          <button v-if="authMode === 'register'" class="auth-switch" type="button" @click="setAuthMode('login')">
+            Ya tengo cuenta, quiero iniciar sesion
+          </button>
+          <button v-else-if="authMode === 'login'" class="auth-switch" type="button" @click="setAuthMode('register')">
+            No tengo cuenta, quiero registrarme
+          </button>
+          <button v-else class="auth-switch" type="button" @click="setAuthMode('login')">
+            Volver al inicio de sesion
           </button>
 
-          <div v-if="oauthProviders.length > 0" class="oauth-block">
+          <div v-if="oauthProviders.length > 0 && authMode !== 'reset'" class="oauth-block">
             <span class="oauth-title">O continuar con</span>
             <div class="oauth-grid">
               <button
@@ -660,7 +869,7 @@ onUnmounted(() => {
           <div class="auth-actions">
             <button class="topbar-btn" type="button" @click="closeLoginModal">Cancelar</button>
             <button class="topbar-btn topbar-btn--primary" type="submit" :disabled="authStore.loading">
-              {{ authStore.loading ? (authMode === 'register' ? 'Creando…' : 'Entrando…') : (authMode === 'register' ? 'Crear cuenta' : 'Entrar') }}
+              {{ authStore.loading ? (authMode === 'register' ? 'Creando…' : (authMode === 'reset' ? 'Actualizando…' : 'Entrando…')) : (authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Guardar nueva contrasena' : 'Entrar')) }}
             </button>
           </div>
         </form>

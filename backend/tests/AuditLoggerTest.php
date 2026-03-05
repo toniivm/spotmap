@@ -14,6 +14,10 @@ class AuditLoggerTest extends TestCase {
     private $auditLogger;
 
     protected function setUp(): void {
+        if (!class_exists('SQLite3')) {
+            $this->markTestSkipped('SQLite3 extension is required for AuditLoggerTest.');
+        }
+
         // Create in-memory SQLite database for testing
         $this->db = new SQLite3(':memory:');
         
@@ -47,7 +51,9 @@ class AuditLoggerTest extends TestCase {
     }
 
     protected function tearDown(): void {
-        $this->db->close();
+        if ($this->db instanceof SQLite3) {
+            $this->db->close();
+        }
     }
 
     public function testLogModerationSuccess() {

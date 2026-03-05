@@ -44,17 +44,6 @@ export function getStoredAccessToken() {
   );
 }
 
-function getStoredUser() {
-  const raw = localStorage.getItem(USER_KEY) || localStorage.getItem('spotmap_local_user');
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(raw);
-    return normalizeUser(parsed);
-  } catch {
-    return null;
-  }
-}
-
 function persistSession(token, user) {
   if (token) {
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
@@ -186,4 +175,116 @@ export async function startOAuth(provider) {
   if (data?.url) {
     window.location.href = data.url;
   }
+}
+
+export async function requestPasswordReset(email) {
+  const supabase = getSupabaseClient();
+  const cleanEmail = String(email || '').trim();
+  if (!cleanEmail) {
+    throw new Error('El email es obligatorio');
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+    redirectTo: window.location.origin + window.location.pathname,
+  });
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo enviar el correo de recuperación');
+  }
+  return true;
+}
+
+export async function resendVerification(email) {
+  const supabase = getSupabaseClient();
+  const cleanEmail = String(email || '').trim();
+  if (!cleanEmail) {
+    throw new Error('El email es obligatorio');
+  }
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email: cleanEmail,
+    options: {
+      emailRedirectTo: window.location.origin + window.location.pathname,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo reenviar el correo de verificación');
+  }
+  return true;
+}
+
+function getRecoveryTokensFromHash() {
+  const rawHash = String(window.location.hash || '').replace(/^#/, '');
+  if (!rawHash) return null;
+  const params = new URLSearchParams(rawHash);
+  const accessToken = String(params.get('access_token') || '');
+  const refreshToken = String(params.get('refresh_token') || '');
+  if (!accessToken || !refreshToken) {
+    return null;
+  }
+  return {
+    accessToken,
+    refreshToken,
+  };
+}
+
+async function updatePasswordWithRecoveryToken(cleanPassword, accessToken) {
+  const endpoint = `${runtimeConfig.supabaseUrl}/auth/v1/user`;
+  const response = await fetch(endpoint, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: runtimeConfig.supabaseAnonKey,
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      password: cleanPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    let message = 'No se pudo actualizar la contrasena';
+    try {
+      const payload = await response.json();
+      message = payload?.msg || payload?.message || payload?.error_description || payload?.error || message;
+    } catch {
+      // Keep generic message when response is not JSON.
+    }
+    throw new Error(message);
+  }
+}
+
+export async function updatePassword(newPassword) {
+  const supabase = getSupabaseClient();
+  const cleanPassword = String(newPassword || '');
+  if (!cleanPassword) {
+    throw new Error('La contrasena es obligatoria');
+  }
+  if (cleanPassword.length < 6) {
+    throw new Error('La contrasena debe tener al menos 6 caracteres');
+  }
+
+  const recoveryTokens = getRecoveryTokensFromHash();
+  if (recoveryTokens) {
+    await supabase.auth.setSession({
+      access_token: recoveryTokens.accessToken,
+      refresh_token: recoveryTokens.refreshToken,
+    });
+  }
+
+  let { error } = await supabase.auth.updateUser({
+    password: cleanPassword,
+  });
+
+  if (error && String(error.message || '').toLowerCase().includes('session missing') && recoveryTokens) {
+    await updatePasswordWithRecoveryToken(cleanPassword, recoveryTokens.accessToken);
+    error = null;
+  }
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo actualizar la contrasena');
+  }
+  return true;
 }

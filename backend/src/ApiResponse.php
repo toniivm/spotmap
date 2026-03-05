@@ -10,13 +10,29 @@ class ApiResponse
     private static function basePayload(): array
     {
         $requestId = class_exists('\\SpotMap\\Logger') ? Logger::getRequestId() : null;
-        $env = class_exists('\\SpotMap\\Config') ? Config::get('ENV', 'development') : 'development';
-        return [
+        $payload = [
             'version' => '1.0',
             'timestamp' => date('c'),
             'requestId' => $requestId,
-            'env' => $env,
         ];
+
+        if (class_exists('\\SpotMap\\Config') && Config::isDebug()) {
+            $payload['env'] = Config::get('ENV', 'development');
+        }
+
+        return $payload;
+    }
+
+    private static function setCommonHeaders(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+        header('Content-Type: application/json');
+        header('Cache-Control: no-store');
+        if (class_exists('\\SpotMap\\Logger')) {
+            header('X-Request-ID: ' . Logger::getRequestId());
+        }
     }
 
     public static function success($data = null, $message = 'Success', $statusCode = 200, $meta = null)
@@ -35,9 +51,7 @@ class ApiResponse
         if ($meta !== null) {
             $payload['meta'] = $meta;
         }
-        if (!headers_sent()) {
-            header('Content-Type: application/json');
-        }
+        self::setCommonHeaders();
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (!defined('SPOTMAP_TESTING') || SPOTMAP_TESTING !== true) {
             exit;
@@ -59,9 +73,7 @@ class ApiResponse
         if ($meta !== null) {
             $payload['meta'] = $meta;
         }
-        if (!headers_sent()) {
-            header('Content-Type: application/json');
-        }
+        self::setCommonHeaders();
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (!defined('SPOTMAP_TESTING') || SPOTMAP_TESTING !== true) {
             exit;
@@ -73,7 +85,7 @@ class ApiResponse
         self::error($message, 404);
     }
 
-    public static function notModified(string $etag = null, $lastModified = null)
+    public static function notModified(?string $etag = null, $lastModified = null)
     {
         if (ob_get_level() > 0) { ob_clean(); }
         http_response_code(304);

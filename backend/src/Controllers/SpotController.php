@@ -518,7 +518,7 @@ class SpotController
             }
 
             // Ownership check
-            if (\SpotMap\Config::get('OWNERSHIP_ENABLED') && isset($spot['user_id']) && isset($user['id']) && $spot['user_id'] !== $user['id']) {
+            if (\SpotMap\Config::getBool('OWNERSHIP_ENABLED', false) && isset($spot['user_id']) && isset($user['id']) && $spot['user_id'] !== $user['id']) {
                 ApiResponse::unauthorized('Not owner of spot');
             }
 

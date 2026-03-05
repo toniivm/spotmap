@@ -27,7 +27,7 @@ class AccountController
             // Spots owned (if ownership enabled)
             'spots_owned' => [],
         ];
-        if (Config::get('OWNERSHIP_ENABLED')) {
+        if (Config::getBool('OWNERSHIP_ENABLED', false)) {
             // naive fetch of all spots then filter; for scale a dedicated endpoint/view needed
             $all = $client->getAllSpots(500,0,[]);
             $owned = array_values(array_filter($all, fn($s)=>($s['user_id']??null)===$uid));

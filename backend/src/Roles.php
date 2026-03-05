@@ -14,6 +14,15 @@ class Roles
 
     public static function getUserRole(array $user): string
     {
+        $email = strtolower(trim((string)($user['email'] ?? '')));
+        $adminEmails = array_values(array_filter(array_map(
+            static fn ($value) => strtolower(trim((string)$value)),
+            explode(',', (string)Config::get('ADMIN_EMAILS', ''))
+        )));
+        if ($email !== '' && in_array($email, $adminEmails, true)) {
+            return 'admin';
+        }
+
         if (isset($user['role']) && isset(self::$hierarchy[$user['role']])) {
             return $user['role'];
         }

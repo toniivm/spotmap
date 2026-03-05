@@ -26,6 +26,14 @@ from auth.users u
 where p.user_id = u.id
   and lower(u.email) = lower('tonivfortnite@gmail.com');
 
+-- Asegurar explícitamente que antonivm777@gmail.com es usuario normal
+update public.profiles p
+set role = 'user',
+    updated_at = now()
+from auth.users u
+where p.user_id = u.id
+  and lower(u.email) = lower('antonivm777@gmail.com');
+
 commit;
 
 -- ===== Verificación =====

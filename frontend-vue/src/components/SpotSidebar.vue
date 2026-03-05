@@ -145,6 +145,18 @@ function trimDescription(value) {
   return text.length > 88 ? `${text.slice(0, 88)}…` : text;
 }
 
+function formatCoord(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toFixed(4) : null;
+}
+
+function getSpotCoords(spot) {
+  const lat = formatCoord(spot?.latitude ?? spot?.lat);
+  const lng = formatCoord(spot?.longitude ?? spot?.lng);
+  if (!lat || !lng) return null;
+  return `${lat}, ${lng}`;
+}
+
 function hasActiveFilters() {
   return Boolean(
     String(props.searchQuery || '').trim()
@@ -182,35 +194,64 @@ function handleDelete(spot, event) {
       <span>Página {{ page }} de {{ pages }}</span>
     </div>
 
+    <div class="sidebar-highlights" aria-label="Contexto rápido">
+      <article class="highlight-card">
+        <span>Categorías</span>
+        <strong>{{ availableCategories.length }}</strong>
+      </article>
+      <article class="highlight-card">
+        <span>Etiquetas</span>
+        <strong>{{ availableTags.length }}</strong>
+      </article>
+      <article class="highlight-card" :class="{ 'highlight-card--active': hasUserLocation }">
+        <span>Ubicación</span>
+        <strong>{{ hasUserLocation ? 'Activa' : 'Off' }}</strong>
+      </article>
+    </div>
+
     <div class="filters">
-      <div class="filter-group">
-        <label class="filter-label" for="search-input">Búsqueda</label>
-        <input
-          id="search-input"
-          class="input"
-          type="search"
-          :value="searchQuery"
-          placeholder="Buscar por título, descripción o tag"
-          @input="emit('change-search', $event.target.value)"
-        >
-      </div>
-
-      <div class="filter-group">
-        <label class="filter-label">Filtros rápidos</label>
-        <div class="row">
-          <select class="input" :value="categoryFilter" @change="emit('change-category', $event.target.value)">
-            <option value="all">Todas las categorías</option>
-            <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
-          </select>
-
-          <select class="input" :value="tagFilter" @change="emit('change-tag', $event.target.value)">
-            <option value="all">Todas las etiquetas</option>
-            <option v-for="tag in availableTags" :key="tag" :value="tag">{{ tag }}</option>
-          </select>
+      <details class="filter-section" open>
+        <summary>🔎 Búsqueda</summary>
+        <div class="filter-group">
+          <label class="filter-label" for="search-input">Texto</label>
+          <input
+            id="search-input"
+            class="input"
+            type="search"
+            :value="searchQuery"
+            placeholder="Buscar por título, descripción o tag"
+            @input="emit('change-search', $event.target.value)"
+          >
         </div>
-      </div>
+      </details>
 
-      <button class="btn-reload" type="button" @click="emit('use-my-location')">📍 Mi ubicación</button>
+      <details class="filter-section" open>
+        <summary>🎯 Segmentación</summary>
+        <div class="filter-group">
+          <label class="filter-label">Filtros rápidos</label>
+          <div class="row">
+            <select class="input" :value="categoryFilter" @change="emit('change-category', $event.target.value)">
+              <option value="all">Todas las categorías</option>
+              <option v-for="category in availableCategories" :key="category" :value="category">{{ category }}</option>
+            </select>
+
+            <select class="input" :value="tagFilter" @change="emit('change-tag', $event.target.value)">
+              <option value="all">Todas las etiquetas</option>
+              <option v-for="tag in availableTags" :key="tag" :value="tag">{{ tag }}</option>
+            </select>
+          </div>
+
+          <div class="sidebar-pills" role="group" aria-label="Acciones rápidas de filtros">
+            <button class="sidebar-pill" type="button" @click="emit('use-my-location')">📍 Mi ubicación</button>
+            <button class="sidebar-pill" type="button" @click="emit('toggle-distance', !distanceEnabled)">
+              {{ distanceEnabled ? 'Distancia: ON' : 'Distancia: OFF' }}
+            </button>
+            <button v-if="canFilterOwner" class="sidebar-pill" type="button" @click="emit('toggle-owner-only', !ownerOnly)">
+              {{ ownerOnly ? 'Solo míos: ON' : 'Solo míos: OFF' }}
+            </button>
+          </div>
+        </div>
+      </details>
 
       <label class="distance-toggle">
         <input type="checkbox" :checked="distanceEnabled" @change="emit('toggle-distance', $event.target.checked)">
@@ -251,7 +292,7 @@ function handleDelete(spot, event) {
       </div>
 
       <div class="quick-actions">
-        <button class="btn-reload" type="button" @click="emit('clear-filters')">Limpiar filtros</button>
+        <button class="btn-reload" type="button" @click="emit('clear-filters')">Reset filtros</button>
       </div>
     </div>
 
@@ -287,11 +328,16 @@ function handleDelete(spot, event) {
           <div v-if="formatTags(spot.tags).length > 0" class="spot-item__tags">
             <span v-for="tag in formatTags(spot.tags)" :key="`${spot.id}-${tag}`" class="spot-item__tag">#{{ tag }}</span>
           </div>
+          <div class="spot-item__meta">
+            <span>{{ getSpotCoords(spot) || 'sin coordenadas' }}</span>
+            <span class="spot-item__meta-dot">•</span>
+            <span>ID {{ spot.id }}</span>
+          </div>
           <div v-if="canManageSpots" class="spot-item__actions">
             <button class="spot-item__action" type="button" @click="handleEdit(spot, $event)">Editar</button>
             <button class="spot-item__action spot-item__action--danger" type="button" @click="handleDelete(spot, $event)">Eliminar</button>
           </div>
-          <small v-else>sin etiquetas</small>
+          <small v-else>{{ formatTags(spot.tags).length > 0 ? 'spot publicado' : 'sin etiquetas' }}</small>
         </button>
       </li>
     </ul>

@@ -53,6 +53,28 @@ function isMissingTableError(error, tableName) {
   );
 }
 
+async function createReviewNotification(userId, spotId, spotTitle) {
+  if (!FEATURES.notifications) {
+    return;
+  }
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from('notifications')
+    .insert({
+      user_id: userId,
+      title: 'Spot en revision',
+      message: `Tu spot "${spotTitle}" esta siendo revisado por moderacion.`,
+      type: 'spot_pending',
+      is_read: false,
+      related_spot_id: spotId,
+    });
+
+  if (error && !isMissingTableError(error, 'notifications')) {
+    throw new Error(error.message || 'No se pudo crear la notificacion de revision');
+  }
+}
+
 async function requireModeratorSession() {
   const session = await requireSession();
   const role = await getUserRole(session.user.id);
@@ -217,10 +239,108 @@ async function createSpot(body) {
       throw new Error(updateError.message || 'No se pudieron guardar las imágenes');
     }
 
+    if (status === 'pending') {
+      await createReviewNotification(session.user.id, created.id, title);
+    }
     return { data: normalizeSpotRow(updated) };
   }
 
+  if (status === 'pending') {
+    await createReviewNotification(session.user.id, created.id, title);
+  }
+
   return { data: normalizeSpotRow(created) };
+}
+
+async function editPendingSpot(path, body) {
+  await requireModeratorSession();
+  const supabase = getSupabaseClient();
+  const match = path.match(/^\/admin\/spots\/(\d+)\/edit$/);
+  const spotId = Number(match?.[1] || 0);
+  if (!spotId) throw new Error('Spot invalido');
+
+  if (!(body instanceof FormData)) {
+    throw new Error('Formato invalido para editar spot pendiente');
+  }
+
+  const { data: currentSpot, error: currentError } = await supabase
+    .from('spots')
+    .select('id,status')
+    .eq('id', spotId)
+    .maybeSingle();
+
+  if (currentError) {
+    throw new Error(currentError.message || 'No se pudo cargar el spot pendiente');
+  }
+  if (!currentSpot?.id) {
+    throw new Error('Spot no encontrado');
+  }
+  if (String(currentSpot.status || '') !== 'pending') {
+    throw new Error('Solo se pueden editar spots pendientes');
+  }
+
+  const updates = {};
+
+  if (body.has('title')) {
+    const title = String(body.get('title') || '').trim();
+    if (!title) throw new Error('El titulo es obligatorio');
+    updates.title = title;
+  }
+
+  if (body.has('description')) {
+    updates.description = String(body.get('description') || '').trim();
+  }
+
+  if (body.has('category')) {
+    updates.category = String(body.get('category') || '').trim();
+  }
+
+  if (body.has('tags')) {
+    const tagsRaw = String(body.get('tags') || '').trim();
+    try {
+      updates.tags = normalizeTags(tagsRaw ? JSON.parse(tagsRaw) : []);
+    } catch {
+      updates.tags = normalizeTags(tagsRaw);
+    }
+  }
+
+  if (body.has('lat')) {
+    const lat = Number(body.get('lat'));
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90) throw new Error('Latitud invalida');
+    updates.lat = lat;
+  }
+
+  if (body.has('lng')) {
+    const lng = Number(body.get('lng'));
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180) throw new Error('Longitud invalida');
+    updates.lng = lng;
+  }
+
+  const image1 = body.get('image1');
+  const image2 = body.get('image2');
+  if (image1 instanceof File) {
+    updates.image_path = await uploadSpotImage(image1, spotId, 1);
+  }
+  if (image2 instanceof File) {
+    updates.image_path_2 = await uploadSpotImage(image2, spotId, 2);
+  }
+
+  if (Object.keys(updates).length === 0) {
+    throw new Error('No hay cambios para guardar');
+  }
+
+  const { data, error } = await supabase
+    .from('spots')
+    .update(updates)
+    .eq('id', spotId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo editar el spot pendiente');
+  }
+
+  return { data: normalizeSpotRow(data) };
 }
 
 async function updateSpot(path, body) {
@@ -523,6 +643,10 @@ export async function apiFetch(endpoint, { method = 'GET', body = null } = {}) {
 
   if (upperMethod === 'POST' && /^\/admin\/spots\/\d+\/reject$/.test(path)) {
     return updateSpotStatus(path, 'rejected');
+  }
+
+  if ((upperMethod === 'PATCH' || upperMethod === 'POST') && /^\/admin\/spots\/\d+\/edit$/.test(path)) {
+    return editPendingSpot(path, body);
   }
 
   if (upperMethod === 'GET' && path === '/admin/stats') {
