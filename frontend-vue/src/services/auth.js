@@ -1,4 +1,5 @@
 import { runtimeConfig } from '../config/runtime';
+import { getSupabaseClient, getUserRole } from './supabase';
 
 const ACCESS_TOKEN_KEY = 'spotmap_access_token';
 const USER_KEY = 'spotmap_user';
@@ -71,66 +72,98 @@ function clearSessionStorage() {
   localStorage.removeItem('auth_token');
 }
 
+async function buildUserFromSession(session) {
+  const user = session?.user;
+  if (!user?.id) return null;
+
+  const role = await getUserRole(user.id);
+  return normalizeUser(
+    {
+      id: user.id,
+      email: user.email || '',
+      role,
+      user_metadata: user.user_metadata || {},
+      app_metadata: user.app_metadata || {},
+    },
+    user.email || '',
+  );
+}
+
 export async function loadSession() {
-  const token = getStoredAccessToken();
-  const user = getStoredUser();
-  if (!token || !user) {
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data?.session) {
+    clearSessionStorage();
     return null;
   }
-  return user;
+
+  const mappedUser = await buildUserFromSession(data.session);
+  if (!mappedUser) {
+    clearSessionStorage();
+    return null;
+  }
+
+  persistSession(data.session.access_token || '', mappedUser);
+  return mappedUser;
 }
 
 export async function signIn(email, password) {
-  const response = await fetch(runtimeConfig.authLoginUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ email, password }),
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: String(email || '').trim(),
+    password: String(password || ''),
   });
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok || !payload?.success) {
-    throw new Error(payload?.error || payload?.message || 'No se pudo iniciar sesión');
+  if (error || !data?.session) {
+    throw new Error(error?.message || 'No se pudo iniciar sesión');
   }
 
-  const token = payload?.session?.access_token || '';
-  const user = normalizeUser(payload?.user, email);
-
-  if (!token || !user) {
-    throw new Error('Respuesta de autenticación inválida');
+  const mappedUser = await buildUserFromSession(data.session);
+  if (!mappedUser) {
+    throw new Error('No se pudo resolver el usuario autenticado');
   }
 
-  persistSession(token, user);
-  return user;
+  persistSession(data.session.access_token || '', mappedUser);
+  return mappedUser;
 }
 
 export async function signUp(name, email, password) {
-  if (!runtimeConfig.backendAuthEnabled) {
-    throw new Error('Registro no disponible en este entorno');
-  }
+  const supabase = getSupabaseClient();
+  const cleanEmail = String(email || '').trim();
+  const cleanName = String(name || '').trim();
 
-  const response = await fetch(`${runtimeConfig.backendPublicBase}/api.php?action=register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({ name, email, password }),
+  const { data, error } = await supabase.auth.signUp({
+    email: cleanEmail,
+    password: String(password || ''),
+    options: {
+      data: {
+        full_name: cleanName,
+        name: cleanName,
+      },
+    },
   });
 
-  const payload = await response.json().catch(() => null);
-  if (!response.ok || !payload?.success) {
-    throw new Error(payload?.error || payload?.message || 'No se pudo completar el registro');
+  if (error) {
+    throw new Error(error.message || 'No se pudo completar el registro');
   }
 
-  const token = payload?.session?.access_token || payload?.token || '';
-  const user = normalizeUser(payload?.user, email);
-
-  if (!token || !user) {
-    throw new Error('Respuesta de registro inválida');
+  const session = data?.session;
+  if (!session) {
+    throw new Error('Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión.');
   }
 
-  persistSession(token, user);
-  return user;
+  const mappedUser = await buildUserFromSession(session);
+  if (!mappedUser) {
+    throw new Error('No se pudo resolver el usuario registrado');
+  }
+
+  persistSession(session.access_token || '', mappedUser);
+  return mappedUser;
 }
 
 export async function signOut() {
+  const supabase = getSupabaseClient();
+  await supabase.auth.signOut();
   clearSessionStorage();
 }
 
@@ -138,6 +171,20 @@ export async function startOAuth(provider) {
   if (!runtimeConfig.oauthEnabled) {
     throw new Error('OAuth deshabilitado');
   }
-  const url = `${runtimeConfig.oauthInitUrl}&provider=${encodeURIComponent(provider)}`;
-  window.location.href = url;
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: window.location.origin + window.location.pathname,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message || 'No se pudo iniciar OAuth');
+  }
+
+  if (data?.url) {
+    window.location.href = data.url;
+  }
 }
