@@ -36,6 +36,10 @@ class Config
             'RATE_LIMIT_ENABLED' => false,
             'RATE_LIMIT_REQUESTS' => 100,
             'RATE_LIMIT_WINDOW' => 3600,
+            'ROLE_CACHE_ENABLED' => true,
+            'ROLE_CACHE_TTL' => 300,
+            'IMAGE_CONVERT_TO_WEBP' => false,
+            'IMAGE_WEBP_QUALITY' => 82,
             // Seguridad / CSP
             'CSP_DEFAULT' => "'self'",
             'CSP_SCRIPT' => "'self' https://cdn.jsdelivr.net https://unpkg.com",

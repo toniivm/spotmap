@@ -22,6 +22,9 @@ Ship a secure, testable, and production-ready SpotMap stack (backend + frontend 
 - [x] Extract modal accessibility logic to reusable composable (`useModalA11y`).
 - [x] Add dedicated modal accessibility E2E spec.
 - [x] Enforce business-flow credentials on `staging` and `release/*` CI contexts.
+- [x] Add role cache TTL + invalidation strategy in backend auth layer.
+- [x] Add image optimization/conversion pipeline (optional JPEG/PNG -> WebP) in upload path.
+- [x] Add observability metrics dashboard for auth/moderation/notifications latency.
 
 ## In Progress (P1)
 - [ ] Add branch protections to require all CI checks before merge (`main`, `staging`, `release/*`).
@@ -33,11 +36,11 @@ Ship a secure, testable, and production-ready SpotMap stack (backend + frontend 
 - [ ] Run one full CI pass on target branches after secrets are set.
 
 ## Pending (P2)
-- [ ] Add role cache TTL + invalidation strategy in backend auth layer.
-- [ ] Add image optimization/conversion pipeline (WebP/size caps) in upload path.
 - [ ] Complete remaining legacy parity items in Vue migration plan.
 - [ ] Extend E2E coverage for moderation edge cases (reject, stale pending state, duplicate actions).
-- [ ] Add observability metrics dashboard for auth/moderation/notifications latency.
+  - Progress (2026-03-06): backend now rejects non-pending moderation transitions with HTTP 409 in `SpotController` and has dedicated test coverage (`SpotControllerModerationGuardTest`).
+  - Progress (2026-03-06): Supabase frontend API path now enforces pending-only moderation transitions (`updateSpotStatus`) and moderation store has unit test coverage for stale-action error propagation.
+  - Progress (2026-03-06): Playwright business-flow spec includes stale duplicate moderation scenario with two moderator pages and conflict-feedback assertion.
 
 ## Definition of Done
 - [ ] CI green on `main`.

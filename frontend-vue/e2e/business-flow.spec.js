@@ -56,20 +56,35 @@ async function createPendingSpot(page, title) {
   await expect(page.getByRole('dialog', { name: 'Crear spot' })).not.toBeVisible({ timeout: 15000 });
 }
 
-async function approveSpotAsModerator(page, spotTitle) {
+async function moderateSpotAsModerator(page, spotTitle, action = 'approve') {
   const moderationSummary = page.getByRole('button', { name: /Moderaci[oó]n/i });
   await expect(moderationSummary).toBeVisible({ timeout: 20000 });
   await moderationSummary.click();
 
   const row = page.locator('.mod-item', { hasText: spotTitle }).first();
   await expect(row).toBeVisible({ timeout: 30000 });
-  await row.getByRole('button', { name: 'Aprobar' }).click();
+  const actionLabel = action === 'reject' ? 'Rechazar' : 'Aprobar';
+  await row.getByRole('button', { name: actionLabel }).click();
 
-  // After action the item should disappear from pending list.
+  // After action the item should disappear from pending list (stale/duplicate guard).
   await expect(page.locator('.mod-item', { hasText: spotTitle })).toHaveCount(0, { timeout: 30000 });
+
+  // Ensure stale row does not keep actionable buttons after moderation refresh cycle.
+  await moderationSummary.click();
+  await expect(page.locator('.mod-item', { hasText: spotTitle })).toHaveCount(0, { timeout: 15000 });
 }
 
-async function assertApprovalNotification(page, spotTitle) {
+async function openModerationAndFindRow(page, spotTitle) {
+  const moderationSummary = page.getByRole('button', { name: /Moderaci[oó]n/i });
+  await expect(moderationSummary).toBeVisible({ timeout: 20000 });
+  await moderationSummary.click();
+
+  const row = page.locator('.mod-item', { hasText: spotTitle }).first();
+  await expect(row).toBeVisible({ timeout: 30000 });
+  return row;
+}
+
+async function assertModerationNotification(page, spotTitle, expectedStatus = 'approved') {
   const bellButton = page.locator('.notif-btn').first();
   await expect(bellButton).toBeVisible({ timeout: 20000 });
   await bellButton.click();
@@ -77,10 +92,12 @@ async function assertApprovalNotification(page, spotTitle) {
   // Notification payload includes the spot title.
   await expect(page.locator('.notif-item', { hasText: spotTitle }).first()).toBeVisible({ timeout: 30000 });
 
-  const approvedMsg = page.locator('.notif-item', {
-    hasText: /aprobad|visible para todos/i,
+  const moderationMsg = page.locator('.notif-item', {
+    hasText: expectedStatus === 'rejected'
+      ? /rechazad|rechazado|no aprobad/i
+      : /aprobad|visible para todos/i,
   }).first();
-  await expect(approvedMsg).toBeVisible({ timeout: 30000 });
+  await expect(moderationMsg).toBeVisible({ timeout: 30000 });
 }
 
 test.describe('SpotMap business flow', () => {
@@ -105,10 +122,53 @@ test.describe('SpotMap business flow', () => {
     await logout(page);
 
     await login(page, E2E_MOD_EMAIL, E2E_MOD_PASSWORD);
-    await approveSpotAsModerator(page, spotTitle);
+    await moderateSpotAsModerator(page, spotTitle, 'approve');
     await logout(page);
 
     await login(page, E2E_USER_EMAIL, E2E_USER_PASSWORD);
-    await assertApprovalNotification(page, spotTitle);
+    await assertModerationNotification(page, spotTitle, 'approved');
+  });
+
+  test('user creates pending spot, moderator rejects, user receives rejection notification', async ({ page }) => {
+    const spotTitle = `E2E Business Reject Spot ${Date.now()}`;
+
+    await page.goto('/');
+
+    await login(page, E2E_USER_EMAIL, E2E_USER_PASSWORD);
+    await createPendingSpot(page, spotTitle);
+    await logout(page);
+
+    await login(page, E2E_MOD_EMAIL, E2E_MOD_PASSWORD);
+    await moderateSpotAsModerator(page, spotTitle, 'reject');
+    await logout(page);
+
+    await login(page, E2E_USER_EMAIL, E2E_USER_PASSWORD);
+    await assertModerationNotification(page, spotTitle, 'rejected');
+  });
+
+  test('stale duplicate moderation action shows conflict feedback', async ({ browser, page }) => {
+    const spotTitle = `E2E Business Stale Spot ${Date.now()}`;
+    const secondModeratorPage = await browser.newPage();
+
+    try {
+      await page.goto('/');
+      await login(page, E2E_USER_EMAIL, E2E_USER_PASSWORD);
+      await createPendingSpot(page, spotTitle);
+      await logout(page);
+
+      await login(page, E2E_MOD_EMAIL, E2E_MOD_PASSWORD);
+      await openModerationAndFindRow(page, spotTitle);
+
+      await secondModeratorPage.goto('/');
+      await login(secondModeratorPage, E2E_MOD_EMAIL, E2E_MOD_PASSWORD);
+      const staleRow = await openModerationAndFindRow(secondModeratorPage, spotTitle);
+
+      await moderateSpotAsModerator(page, spotTitle, 'approve');
+      await staleRow.getByRole('button', { name: 'Rechazar' }).click();
+
+      await expect(secondModeratorPage.locator('.mod-state--error')).toContainText(/no longer pending moderation|ya no est[aá] pendiente/i, { timeout: 20000 });
+    } finally {
+      await secondModeratorPage.close();
+    }
   });
 });

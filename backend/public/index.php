@@ -103,6 +103,25 @@ if (!DatabaseAdapter::useSupabase()) {
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
 
+// Registrar métricas de request incluso cuando se hace exit temprano.
+register_shutdown_function(function() use ($__req_start, $uri, $method) {
+    $elapsedSeconds = microtime(true) - $__req_start;
+    $elapsedMs = $elapsedSeconds * 1000.0;
+
+    try {
+        \SpotMap\Metrics::recordDuration($elapsedMs);
+        Logger::getInstance()->logMetric(
+            $uri,
+            $method,
+            http_response_code(),
+            $elapsedSeconds,
+            memory_get_peak_usage(true)
+        );
+    } catch (\Throwable $metricError) {
+        // Nunca romper respuesta por fallo de observabilidad.
+    }
+});
+
 // Rate limiting
 $rateIdentifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 if (!RateLimiter::check($rateIdentifier)) {
@@ -512,11 +531,5 @@ if ($method === 'DELETE' && preg_match('#/api/notifications/(\d+)$#', $uri)) {
 http_response_code(404);
 header('Content-Type: application/json');
 echo json_encode(['error'=>'Route not found']);
-
-// Latency recording on shutdown
-register_shutdown_function(function() use ($__req_start) {
-    $elapsed = (microtime(true) - $__req_start) * 1000.0; // ms
-    \SpotMap\Metrics::recordDuration($elapsed);
-});
 
 

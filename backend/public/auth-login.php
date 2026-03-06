@@ -1,12 +1,33 @@
 <?php
 // auth-login.php - Endpoint de login local (fallback cuando Supabase no está disponible)
 
+$__req_start = microtime(true);
+
 require __DIR__ . '/../src/Config.php';
 require __DIR__ . '/../src/Database.php';
+require __DIR__ . '/../src/Logger.php';
 
 use SpotMap\Database;
+use SpotMap\Logger;
 
 header('Content-Type: application/json');
+
+$__uri = $_SERVER['REQUEST_URI'] ?? '/auth-login.php';
+$__method = $_SERVER['REQUEST_METHOD'] ?? 'POST';
+register_shutdown_function(function() use ($__req_start, $__uri, $__method) {
+    $elapsedSeconds = microtime(true) - $__req_start;
+    try {
+        Logger::getInstance()->logMetric(
+            $__uri,
+            $__method,
+            http_response_code(),
+            $elapsedSeconds,
+            memory_get_peak_usage(true)
+        );
+    } catch (\Throwable $metricError) {
+        // Ignore metric errors in auth fallback path.
+    }
+});
 
 function base64UrlEncode(string $value): string {
     return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');

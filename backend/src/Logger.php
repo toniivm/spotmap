@@ -450,6 +450,79 @@ class Logger
     }
 
     /**
+     * Agrupar métricas por dominio funcional para observabilidad de negocio.
+     */
+    public function getDomainLatencySummary(): array
+    {
+        if (!file_exists($this->metricsFile)) {
+            return [];
+        }
+
+        $content = @file_get_contents($this->metricsFile);
+        $metrics = json_decode($content, true) ?? [];
+        if (empty($metrics)) {
+            return [];
+        }
+
+        $groups = [
+            'auth' => ['count' => 0, 'sum_ms' => 0.0, 'max_ms' => 0.0, 'errors' => 0],
+            'moderation' => ['count' => 0, 'sum_ms' => 0.0, 'max_ms' => 0.0, 'errors' => 0],
+            'notifications' => ['count' => 0, 'sum_ms' => 0.0, 'max_ms' => 0.0, 'errors' => 0],
+        ];
+
+        foreach ($metrics as $metric) {
+            $endpoint = strtolower((string)($metric['endpoint'] ?? ''));
+            $status = (int)($metric['status'] ?? 0);
+            $time = (float)($metric['response_time_ms'] ?? 0.0);
+
+            $domain = null;
+            if (str_contains($endpoint, 'auth') || str_contains($endpoint, 'login')) {
+                $domain = 'auth';
+            } elseif (str_contains($endpoint, '/api/admin') || str_contains($endpoint, 'moderat') || str_contains($endpoint, '/audit')) {
+                $domain = 'moderation';
+            } elseif (str_contains($endpoint, '/api/notifications')) {
+                $domain = 'notifications';
+            }
+
+            if ($domain === null) {
+                continue;
+            }
+
+            $groups[$domain]['count']++;
+            $groups[$domain]['sum_ms'] += $time;
+            if ($time > $groups[$domain]['max_ms']) {
+                $groups[$domain]['max_ms'] = $time;
+            }
+            if ($status >= 400) {
+                $groups[$domain]['errors']++;
+            }
+        }
+
+        foreach ($groups as $domain => $stats) {
+            if ($stats['count'] === 0) {
+                $groups[$domain] = [
+                    'count' => 0,
+                    'avg_response_time_ms' => 0,
+                    'max_response_time_ms' => 0,
+                    'error_count' => 0,
+                    'error_rate_pct' => 0,
+                ];
+                continue;
+            }
+
+            $groups[$domain] = [
+                'count' => $stats['count'],
+                'avg_response_time_ms' => round($stats['sum_ms'] / $stats['count'], 2),
+                'max_response_time_ms' => round($stats['max_ms'], 2),
+                'error_count' => $stats['errors'],
+                'error_rate_pct' => round(($stats['errors'] / $stats['count']) * 100, 2),
+            ];
+        }
+
+        return $groups;
+    }
+
+    /**
      * Obtener alertas
      */
     public function getAlerts(int $limit = 50): array

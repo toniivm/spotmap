@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 // Iniciar buffering para evitar que cualquier salida (BOM/avisos) rompa el JSON
 ob_start();
+$__req_start = microtime(true);
 
 require __DIR__ . '/../src/Config.php';
 require __DIR__ . '/../src/Logger.php';
@@ -85,6 +86,23 @@ $logger->info('Nueva petición API', [
     'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
     'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
 ]);
+
+$__uri = $_SERVER['REQUEST_URI'] ?? '/api.php';
+$__method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+register_shutdown_function(function() use ($__req_start, $__uri, $__method, $logger) {
+    $elapsedSeconds = microtime(true) - $__req_start;
+    try {
+        $logger->logMetric(
+            $GLOBALS['action'] ?? $__uri,
+            $__method,
+            http_response_code(),
+            $elapsedSeconds,
+            memory_get_peak_usage(true)
+        );
+    } catch (\Throwable $metricError) {
+        // Evitar side effects de métricas en respuesta API.
+    }
+});
 
 // ⚠️ SISTEMA DE SEGURIDAD AVANZADO ACTIVADO
 \SpotMap\Security::setAdvancedSecurityHeaders();

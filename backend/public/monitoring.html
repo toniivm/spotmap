@@ -245,6 +245,24 @@
                 <div class="value status-healthy" id="dbHealth">✓ Connected</div>
                 <p class="unit" id="dbTime">-</p>
             </div>
+
+            <div class="card">
+                <h2>Auth Latency</h2>
+                <div class="value" id="authLatency">-</div>
+                <p class="unit" id="authMeta">avg ms</p>
+            </div>
+
+            <div class="card">
+                <h2>Moderation Latency</h2>
+                <div class="value" id="moderationLatency">-</div>
+                <p class="unit" id="moderationMeta">avg ms</p>
+            </div>
+
+            <div class="card">
+                <h2>Notifications Latency</h2>
+                <div class="value" id="notificationsLatency">-</div>
+                <p class="unit" id="notificationsMeta">avg ms</p>
+            </div>
         </div>
 
         <!-- Logs and Alerts -->
@@ -281,7 +299,11 @@
                         'Authorization': `Bearer ${API_TOKEN}`
                     }
                 });
-                return await response.json();
+                const payload = await response.json();
+                if (!response.ok || payload?.success === false) {
+                    return null;
+                }
+                return payload?.data ?? null;
             } catch (error) {
                 console.error(`Error fetching ${endpoint}:`, error);
                 return null;
@@ -299,6 +321,20 @@
                 const errorRate = ((data.error_count / data.total_requests) * 100).toFixed(2);
                 document.getElementById('errorRate').textContent = errorRate + '%';
             }
+
+            const domains = data.domains || {};
+            const auth = domains.auth || {};
+            const moderation = domains.moderation || {};
+            const notifications = domains.notifications || {};
+
+            document.getElementById('authLatency').textContent = Number(auth.avg_response_time_ms || 0).toFixed(2);
+            document.getElementById('authMeta').textContent = `${auth.count || 0} req · ${auth.error_rate_pct || 0}% err`;
+
+            document.getElementById('moderationLatency').textContent = Number(moderation.avg_response_time_ms || 0).toFixed(2);
+            document.getElementById('moderationMeta').textContent = `${moderation.count || 0} req · ${moderation.error_rate_pct || 0}% err`;
+
+            document.getElementById('notificationsLatency').textContent = Number(notifications.avg_response_time_ms || 0).toFixed(2);
+            document.getElementById('notificationsMeta').textContent = `${notifications.count || 0} req · ${notifications.error_rate_pct || 0}% err`;
         }
 
         async function updateHealth() {
@@ -324,6 +360,11 @@
             const container = document.getElementById('logsContainer');
             container.innerHTML = '';
 
+            if (!Array.isArray(data) || data.length === 0) {
+                container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No logs</div>';
+                return;
+            }
+
             data.forEach(log => {
                 const entry = document.createElement('div');
                 entry.className = `log-entry ${log.level}`;
@@ -343,7 +384,7 @@
             const container = document.getElementById('alertsContainer');
             container.innerHTML = '';
 
-            if (data.length === 0) {
+            if (!Array.isArray(data) || data.length === 0) {
                 container.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">No alerts</div>';
                 return;
             }

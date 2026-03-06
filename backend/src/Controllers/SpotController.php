@@ -8,10 +8,16 @@ use SpotMap\Cache;
 use SpotMap\Auth;
 use SpotMap\Logger;
 use SpotMap\Constants;
+use SpotMap\Config;
 use AuditLogger;
 
 class SpotController
 {
+    public static function canModerateStatusTransition(string $currentStatus): bool
+    {
+        return $currentStatus === 'pending';
+    }
+
     /**
      * GET /spots - Listar todos los spots con paginación
      */
@@ -227,17 +233,16 @@ class SpotController
                         ApiResponse::validation([$fileKey => ['Invalid image format']]);
                         return;
                     }
-                    
-                    $ext = pathinfo($photo['name'], PATHINFO_EXTENSION);
-                    $filename = uniqid('spot_') . '.' . $ext;
+
+                    $normalizedImage = $this->prepareUploadImage($photo);
+                    $filename = uniqid('spot_') . '.' . $normalizedImage['extension'];
 
                     if (\SpotMap\DatabaseAdapter::useSupabase()) {
                         // Subida a Supabase Storage
                         try {
                             $bucket = 'spots';
                             $path = $bucket . '/' . $filename;
-                            $fileContents = file_get_contents($photo['tmp_name']);
-                            $uploadOk = \SpotMap\SupabaseStorage::upload($path, $fileContents, $photo['type']);
+                            $uploadOk = \SpotMap\SupabaseStorage::upload($path, $normalizedImage['contents'], $normalizedImage['mime']);
                             if ($uploadOk) {
                                 $publicUrl = \SpotMap\SupabaseStorage::publicUrl($path);
                                 $spotData[$dbColumn] = $publicUrl;
@@ -254,7 +259,11 @@ class SpotController
                             mkdir($uploadDir, 0755, true);
                         }
                         $uploadPath = $uploadDir . $filename;
-                        if (move_uploaded_file($photo['tmp_name'], $uploadPath)) {
+                        $saved = $normalizedImage['converted']
+                            ? (file_put_contents($uploadPath, $normalizedImage['contents']) !== false)
+                            : move_uploaded_file($photo['tmp_name'], $uploadPath);
+
+                        if ($saved) {
                             $relativePath = '/uploads/spots/' . $filename;
                             $spotData[$dbColumn] = $relativePath;
                             $uploadedImages[] = $relativePath;
@@ -547,8 +556,8 @@ class SpotController
             }
 
             // Guardar archivo (Supabase Storage o local)
-            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $filename = 'spot_' . $id . '_' . time() . '.' . $ext;
+            $normalizedImage = $this->prepareUploadImage($file);
+            $filename = 'spot_' . $id . '_' . time() . '.' . $normalizedImage['extension'];
             $uploadDir = __DIR__ . '/../../public/uploads/spots/';
 
             if (!is_dir($uploadDir)) {
@@ -565,8 +574,7 @@ class SpotController
                 try {
                     $bucket = 'spots';
                     $path = $bucket . '/' . $filename;
-                    $fileContents = file_get_contents($file['tmp_name']);
-                    $uploadOk = \SpotMap\SupabaseStorage::upload($path, $fileContents, $file['type']);
+                    $uploadOk = \SpotMap\SupabaseStorage::upload($path, $normalizedImage['contents'], $normalizedImage['mime']);
                     if (!$uploadOk) {
                         ApiResponse::error('Failed to save file (Supabase)', 500);
                         return;
@@ -577,7 +585,11 @@ class SpotController
                     return;
                 }
             } else {
-                if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+                $saved = $normalizedImage['converted']
+                    ? (file_put_contents($filepath, $normalizedImage['contents']) !== false)
+                    : move_uploaded_file($file['tmp_name'], $filepath);
+
+                if (!$saved) {
                     ApiResponse::error('Failed to save file', 500);
                     return;
                 }
@@ -629,12 +641,18 @@ class SpotController
 
             // Get current spot state
             $spot = DatabaseAdapter::getSpotById($id);
-            if (!$spot) {
+            if (!is_array($spot) || isset($spot['error'])) {
                 ApiResponse::notFound('Spot not found');
                 return;
             }
 
             $oldStatus = $spot['status'] ?? 'unknown';
+            if (!self::canModerateStatusTransition($oldStatus)) {
+                ApiResponse::error('Spot is no longer pending moderation', 409, [
+                    'current_status' => $oldStatus,
+                ]);
+                return;
+            }
             
             // Update status to approved
             $result = DatabaseAdapter::updateSpot($id, ['status' => 'approved']);
@@ -693,12 +711,18 @@ class SpotController
 
             // Get current spot state
             $spot = DatabaseAdapter::getSpotById($id);
-            if (!$spot) {
+            if (!is_array($spot) || isset($spot['error'])) {
                 ApiResponse::notFound('Spot not found');
                 return;
             }
 
             $oldStatus = $spot['status'] ?? 'unknown';
+            if (!self::canModerateStatusTransition($oldStatus)) {
+                ApiResponse::error('Spot is no longer pending moderation', 409, [
+                    'current_status' => $oldStatus,
+                ]);
+                return;
+            }
             
             // Get rejection reason from request body
             $input = json_decode(file_get_contents('php://input'), true) ?? [];
@@ -741,5 +765,82 @@ class SpotController
         } catch (\Exception $e) {
             ApiResponse::serverError($e->getMessage());
         }
+    }
+
+    /**
+     * Normaliza la imagen subida y aplica conversión opcional a WebP.
+     */
+    private function prepareUploadImage(array $file): array
+    {
+        $contents = file_get_contents($file['tmp_name']);
+        if ($contents === false) {
+            throw new \RuntimeException('Failed to read uploaded file');
+        }
+
+        $mime = (string) ($file['type'] ?? 'application/octet-stream');
+        $ext = strtolower(pathinfo((string) ($file['name'] ?? ''), PATHINFO_EXTENSION));
+
+        $converted = false;
+        if ($this->shouldConvertToWebp($mime)) {
+            $webp = $this->convertBinaryImageToWebp($contents, $mime);
+            if ($webp !== null) {
+                $contents = $webp;
+                $mime = 'image/webp';
+                $ext = 'webp';
+                $converted = true;
+            }
+        }
+
+        if ($ext === '') {
+            $ext = $mime === 'image/webp' ? 'webp' : 'jpg';
+        }
+
+        return [
+            'contents' => $contents,
+            'mime' => $mime,
+            'extension' => $ext,
+            'converted' => $converted,
+        ];
+    }
+
+    private function shouldConvertToWebp(string $mime): bool
+    {
+        if (!Config::getBool('IMAGE_CONVERT_TO_WEBP', false)) {
+            return false;
+        }
+
+        return in_array($mime, ['image/jpeg', 'image/png'], true);
+    }
+
+    private function convertBinaryImageToWebp(string $contents, string $mime): ?string
+    {
+        if (!function_exists('imagewebp') || !function_exists('imagecreatefromstring')) {
+            return null;
+        }
+
+        $image = @imagecreatefromstring($contents);
+        if ($image === false) {
+            return null;
+        }
+
+        if ($mime === 'image/png') {
+            if (function_exists('imagepalettetotruecolor')) {
+                @imagepalettetotruecolor($image);
+            }
+            @imagealphablending($image, true);
+            @imagesavealpha($image, true);
+        }
+
+        $quality = max(1, min(100, (int) Config::get('IMAGE_WEBP_QUALITY', 82)));
+
+        ob_start();
+        $encoded = @imagewebp($image, null, $quality);
+        $webpData = $encoded ? ob_get_clean() : null;
+        if (!$encoded) {
+            ob_end_clean();
+        }
+
+        imagedestroy($image);
+        return $webpData !== null ? (string) $webpData : null;
     }
 }

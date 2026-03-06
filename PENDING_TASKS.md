@@ -38,19 +38,24 @@
 - Entregable: migracion por modulos con matriz de paridad cerrada.
 
 2. Cache de roles con TTL
-- Estado: pendiente.
-- Evidencia: `backend/src/Roles.php` cachea en memoria sin TTL/invalidacion.
-- Entregable: TTL configurable + invalidacion segura + tests.
+- Estado: completado (06 Mar 2026).
+- Evidencia: `backend/src/Roles.php` ahora usa `ROLE_CACHE_TTL` + expiración por entrada y `clearRoleCache()` para invalidación explícita.
+- Entregable: TTL configurable + invalidación segura + tests en `backend/tests/RolesTest.php`.
 
 3. Conversion de imagen a WebP en upload
-- Estado: parcial.
-- Evidencia: se valida/acepta webp, pero no hay conversion automatica JPEG/PNG -> WebP.
-- Entregable: pipeline opcional de conversion (GD/Imagick) con fallback seguro.
+- Estado: completado (06 Mar 2026).
+- Evidencia: `backend/src/Controllers/SpotController.php` implementa conversión opcional JPEG/PNG -> WebP con `IMAGE_CONVERT_TO_WEBP` y `IMAGE_WEBP_QUALITY`, fallback automático al archivo original si GD no está disponible.
+- Entregable: pipeline opcional de conversión con fallback seguro en create/upload.
 
 4. Mobile readiness formal
 - Estado: parcial.
 - Hecho: layout responsive funcional y proyecto Playwright mobile.
 - Falta: matriz dispositivos, performance 4G, ajustes tactiles finos y criterio de "mobile listo" certificado.
+
+5. Observabilidad auth/moderacion/notificaciones
+- Estado: completado (06 Mar 2026).
+- Evidencia: instrumentacion de latencia por request en `public/index.php`, `public/api.php` y `public/auth-login.php`; agregacion por dominio en `Logger::getDomainLatencySummary()` y dashboard en `public/monitoring.html`.
+- Entregable: cards de latencia media y error rate para auth/moderacion/notificaciones en dashboard de monitoreo.
 
 ---
 
@@ -110,14 +115,14 @@
 ### [~] 11. Sistema de auditoría para moderación
 **Estado real:** Logging de auditoría y migración implementados; falta dashboard/visualización operativa.
 
-### [ ] 12. Mejorar caché usuario/roles
-**Estado real:** Sigue pendiente cacheo/TTL explícito para evitar consultas repetidas.
+### [x] 12. Mejorar caché usuario/roles
+**Estado real:** Completado con TTL configurable, expiración por usuario e invalidación explícita (`clearRoleCache`).
 
 ### [x] 13. Error handling centralizado
 **Estado real:** Implementado (`frontend/js/errorHandler.js`) e integrado en módulos principales.
 
-### [~] 14. Optimizar carga de imágenes (WebP)
-**Estado real:** Se acepta WebP, pero no está cerrada la conversión automática JPEG → WebP en upload.
+### [x] 14. Optimizar carga de imágenes (WebP)
+**Estado real:** Conversión automática opcional JPEG/PNG → WebP implementada en backend con fallback seguro.
 
 ### [~] 15. Fix aria-hidden en modales
 **Estado real:** Mitigado en parte, pero no estandarizado con `inert` en todos los modales.
@@ -147,8 +152,8 @@ Garantizar experiencia mobile-first usable y verificable en dispositivos táctil
 
 | Estado | Cantidad |
 |--------|----------|
-| Completadas | 5 |
-| Parciales | 9 |
+| Completadas | 7 |
+| Parciales | 7 |
 | Pendientes | 1 |
 | **Total** | **15** |
 

@@ -45,6 +45,7 @@ class MonitoringController {
         }
 
         $metrics = $this->logger->getMetricsSummary();
+        $metrics['domains'] = $this->logger->getDomainLatencySummary();
         ApiResponse::success($metrics);
     }
 

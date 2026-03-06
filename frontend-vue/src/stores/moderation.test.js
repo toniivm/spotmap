@@ -53,6 +53,15 @@ describe('useModerationStore', () => {
     expect(rejectPendingSpot).toHaveBeenCalledWith(10, { token: 'token-123' });
   });
 
+  it('muestra error cuando la accion de moderacion queda stale', async () => {
+    approvePendingSpot.mockRejectedValueOnce(new Error('Spot is no longer pending moderation'));
+    const store = useModerationStore();
+
+    await store.approve(10);
+
+    expect(store.error).toContain('no longer pending moderation');
+  });
+
   it('desactiva soporte en backend no compatible', async () => {
     isModerationUnsupported.mockReturnValueOnce(true);
     fetchPendingSpots.mockRejectedValueOnce(new Error('Moderation requires Supabase backend'));

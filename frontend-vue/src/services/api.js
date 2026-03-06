@@ -436,6 +436,22 @@ async function updateSpotStatus(path, nextStatus) {
   const spotId = Number(match?.[1] || 0);
   if (!spotId) throw new Error('Spot inválido');
 
+  const { data: currentSpot, error: currentError } = await supabase
+    .from('spots')
+    .select('id,status')
+    .eq('id', spotId)
+    .maybeSingle();
+
+  if (currentError) {
+    throw new Error(currentError.message || 'No se pudo validar estado del spot');
+  }
+  if (!currentSpot?.id) {
+    throw new Error('Spot no encontrado');
+  }
+  if (String(currentSpot.status || '') !== 'pending') {
+    throw new Error('Spot is no longer pending moderation');
+  }
+
   const { error } = await supabase
     .from('spots')
     .update({ status: nextStatus })
