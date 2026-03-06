@@ -35,7 +35,8 @@ jobs:
           cache-dependency-path: frontend-vue/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: |
+          npm ci --no-audit --no-fund || npm ci --no-audit --no-fund
 
       - name: Lint
         run: npm run lint
@@ -49,6 +50,10 @@ jobs:
   backend:
     name: Backend PHPUnit
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,15 +64,13 @@ jobs:
           php-version: "8.2"
           coverage: none
           extensions: curl, sqlite3
+          tools: composer:v2
 
-      - name: Download PHPUnit 10
-        run: |
-          mkdir -p tools
-          curl -Ls https://phar.phpunit.de/phpunit-10.phar -o tools/phpunit.phar
-          php tools/phpunit.phar --version
+      - name: Install backend dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
 
       - name: Run backend tests
-        run: php tools/phpunit.phar --configuration backend/phpunit.xml.dist
+        run: php vendor/bin/phpunit --configuration phpunit.xml.dist
 
   e2e-smoke:
     name: E2E Smoke (Desktop + Mobile)
@@ -93,7 +96,8 @@ jobs:
           cache-dependency-path: frontend-vue/package-lock.json
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: |
+          npm ci --no-audit --no-fund || npm ci --no-audit --no-fund
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
