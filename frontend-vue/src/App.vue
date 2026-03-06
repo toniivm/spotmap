@@ -11,6 +11,7 @@ import { useNotificationsStore } from './stores/notifications';
 import { useModerationStore } from './stores/moderation';
 import { apiFetch } from './services/api';
 import { getStoredAccessToken } from './services/auth';
+import { useModalA11y } from './composables/useModalA11y';
 
 const spotsStore = useSpotsStore();
 const authStore = useAuthStore();
@@ -44,6 +45,9 @@ const creatingSpot = ref(false);
 const locatingSpotCoords = ref(false);
 const showCreateSpotMapPicker = ref(false);
 const createSpotMapRoot = ref(null);
+const appContentRef = ref(null);
+const loginModalRef = ref(null);
+const createSpotModalRef = ref(null);
 const mobileSidebarOpen = ref(false);
 const mobileMapFocus = ref(false);
 const isCompactViewport = ref(false);
@@ -77,6 +81,14 @@ const hasUserLocation = computed(() => !!spotsStore.userLocation);
 const totalVisibleSpots = computed(() => spotsStore.filteredSpots.length || 0);
 const totalCategories = computed(() => spotsStore.availableCategories.length || 0);
 const totalTags = computed(() => spotsStore.availableTags.length || 0);
+const { captureLastFocusedElement, isAnyModalOpen } = useModalA11y({
+  showLoginModal,
+  showCreateSpotModal,
+  loginModalRef,
+  createSpotModalRef,
+  closeLoginModal,
+  closeCreateSpotModal,
+});
 
 const oauthProviderLabels = {
   google: 'Google',
@@ -276,6 +288,7 @@ function validateCreateSpotForm() {
 }
 
 function openLoginModal() {
+  captureLastFocusedElement();
   authMode.value = 'login';
   authError.value = '';
   authStatusMessage.value = '';
@@ -399,6 +412,7 @@ async function handleOAuthLogin(provider) {
 }
 
 function openCreateSpotModal() {
+  captureLastFocusedElement();
   createSpotError.value = '';
   clearCreateSpotValidationErrors();
   showCreateSpotModal.value = true;
@@ -700,106 +714,108 @@ onUnmounted(() => {
 
 <template>
   <div class="app-shell" :class="{ 'app-shell--map-focus': mobileMapFocus }">
-    <header class="topbar">
-      <div class="brand-wrap">
-        <div class="brand">📸 SpotMap</div>
-        <span class="brand-subtitle">Mapa colaborativo para descubrir y compartir spots</span>
-      </div>
-      <div class="topbar-actions">
-        <button class="topbar-btn only-mobile" type="button" @click="toggleMobileSidebar">
-          {{ mobileSidebarOpen ? 'Cerrar filtros' : 'Filtros' }}
-        </button>
-        <button class="topbar-btn only-mobile" type="button" @click="toggleMobileMapFocus">
-          {{ mobileMapFocus ? 'Vista normal' : 'Solo mapa' }}
-        </button>
-        <ModerationPanel v-if="isAuthenticated && isModerator" />
-        <button v-if="isAuthenticated" class="topbar-btn topbar-btn--primary" type="button" @click="openCreateSpotModal">+ Añadir Spot</button>
-        <NotificationsDropdown v-if="isAuthenticated" />
-        <span v-if="isAuthenticated" class="meta">Hola, {{ currentUsername }}</span>
-        <span v-if="isAuthenticated" class="role-pill">{{ currentRoleLabel }}</span>
-        <button v-if="isAuthenticated" class="topbar-btn" type="button" @click="handleLogout">Cerrar sesión</button>
-        <button v-else class="topbar-btn" type="button" @click="openLoginModal">Iniciar sesión</button>
-      </div>
-    </header>
+    <div ref="appContentRef" :inert="isAnyModalOpen" :aria-hidden="isAnyModalOpen ? 'true' : 'false'">
+      <header class="topbar">
+        <div class="brand-wrap">
+          <div class="brand">📸 SpotMap</div>
+          <span class="brand-subtitle">Mapa colaborativo para descubrir y compartir spots</span>
+        </div>
+        <div class="topbar-actions">
+          <button class="topbar-btn only-mobile" type="button" @click="toggleMobileSidebar">
+            {{ mobileSidebarOpen ? 'Cerrar filtros' : 'Filtros' }}
+          </button>
+          <button class="topbar-btn only-mobile" type="button" @click="toggleMobileMapFocus">
+            {{ mobileMapFocus ? 'Vista normal' : 'Solo mapa' }}
+          </button>
+          <ModerationPanel v-if="isAuthenticated && isModerator" />
+          <button v-if="isAuthenticated" class="topbar-btn topbar-btn--primary" type="button" @click="openCreateSpotModal">+ Añadir Spot</button>
+          <NotificationsDropdown v-if="isAuthenticated" />
+          <span v-if="isAuthenticated" class="meta">Hola, {{ currentUsername }}</span>
+          <span v-if="isAuthenticated" class="role-pill">{{ currentRoleLabel }}</span>
+          <button v-if="isAuthenticated" class="topbar-btn" type="button" @click="handleLogout">Cerrar sesión</button>
+          <button v-else class="topbar-btn" type="button" @click="openLoginModal">Iniciar sesión</button>
+        </div>
+      </header>
 
-    <section class="kpi-strip" aria-label="Resumen rápido">
-      <article class="kpi-card">
-        <span>Spots visibles</span>
-        <strong>{{ totalVisibleSpots }}</strong>
-      </article>
-      <article class="kpi-card">
-        <span>Categorías activas</span>
-        <strong>{{ totalCategories }}</strong>
-      </article>
-      <article class="kpi-card">
-        <span>Etiquetas detectadas</span>
-        <strong>{{ totalTags }}</strong>
-      </article>
-    </section>
+      <section class="kpi-strip" aria-label="Resumen rápido">
+        <article class="kpi-card">
+          <span>Spots visibles</span>
+          <strong>{{ totalVisibleSpots }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Categorías activas</span>
+          <strong>{{ totalCategories }}</strong>
+        </article>
+        <article class="kpi-card">
+          <span>Etiquetas detectadas</span>
+          <strong>{{ totalTags }}</strong>
+        </article>
+      </section>
 
-    <main class="layout" :class="{ 'layout--sidebar-open': mobileSidebarOpen, 'layout--map-focus': mobileMapFocus }">
-      <button
-        v-if="isCompactViewport && mobileSidebarOpen"
-        type="button"
-        class="sidebar-backdrop"
-        aria-label="Cerrar panel de filtros"
-        @click="mobileSidebarOpen = false"
-      ></button>
+      <main class="layout" :class="{ 'layout--sidebar-open': mobileSidebarOpen, 'layout--map-focus': mobileMapFocus }">
+        <button
+          v-if="isCompactViewport && mobileSidebarOpen"
+          type="button"
+          class="sidebar-backdrop"
+          aria-label="Cerrar panel de filtros"
+          @click="mobileSidebarOpen = false"
+        ></button>
 
-      <div class="sidebar-shell" :class="{ 'sidebar-shell--open': mobileSidebarOpen }">
-        <SpotSidebar
-          :spots="spotsStore.filteredSpots"
-          :loading="spotsStore.loading"
-          :error="spotsStore.error"
-          :selected-id="selectedSpotId"
-          :view-mode="spotsStore.viewMode"
-          :search-query="spotsStore.searchQuery"
-          :category-filter="spotsStore.categoryFilter"
-          :tag-filter="spotsStore.tagFilter"
-          :available-categories="spotsStore.availableCategories"
-          :available-tags="spotsStore.availableTags"
-          :distance-enabled="spotsStore.distanceEnabled"
-          :max-distance-km="spotsStore.maxDistanceKm"
-          :has-user-location="hasUserLocation"
-          :owner-only="spotsStore.ownerOnly"
-          :can-filter-owner="isAuthenticated"
-          :can-manage-spots="isAuthenticated && (isAdmin || isModerator)"
-          :page="spotsStore.page"
-          :pages="spotsStore.pages"
-          :total="spotsStore.total"
-          :has-prev="spotsStore.hasPrev"
-          :has-next="spotsStore.hasNext"
-          @select-spot="handleSelectSpotFromSidebar"
-          @reload="spotsStore.reload"
-          @change-view="spotsStore.setViewMode"
-          @change-search="spotsStore.setSearchQuery"
-          @change-category="spotsStore.setCategoryFilter"
-          @change-tag="spotsStore.setTagFilter"
-          @toggle-distance="spotsStore.setDistanceEnabled"
-          @change-distance="spotsStore.setMaxDistanceKm"
-          @use-my-location="handleUseMyLocation"
-          @toggle-owner-only="spotsStore.setOwnerOnly"
-          @edit-spot="handleEditSpot"
-          @delete-spot="handleDeleteSpot"
-          @clear-filters="spotsStore.resetFilters"
-          @prev-page="spotsStore.prevPage"
-          @next-page="spotsStore.nextPage"
-        />
-      </div>
+        <div class="sidebar-shell" :class="{ 'sidebar-shell--open': mobileSidebarOpen }">
+          <SpotSidebar
+            :spots="spotsStore.filteredSpots"
+            :loading="spotsStore.loading"
+            :error="spotsStore.error"
+            :selected-id="selectedSpotId"
+            :view-mode="spotsStore.viewMode"
+            :search-query="spotsStore.searchQuery"
+            :category-filter="spotsStore.categoryFilter"
+            :tag-filter="spotsStore.tagFilter"
+            :available-categories="spotsStore.availableCategories"
+            :available-tags="spotsStore.availableTags"
+            :distance-enabled="spotsStore.distanceEnabled"
+            :max-distance-km="spotsStore.maxDistanceKm"
+            :has-user-location="hasUserLocation"
+            :owner-only="spotsStore.ownerOnly"
+            :can-filter-owner="isAuthenticated"
+            :can-manage-spots="isAuthenticated && (isAdmin || isModerator)"
+            :page="spotsStore.page"
+            :pages="spotsStore.pages"
+            :total="spotsStore.total"
+            :has-prev="spotsStore.hasPrev"
+            :has-next="spotsStore.hasNext"
+            @select-spot="handleSelectSpotFromSidebar"
+            @reload="spotsStore.reload"
+            @change-view="spotsStore.setViewMode"
+            @change-search="spotsStore.setSearchQuery"
+            @change-category="spotsStore.setCategoryFilter"
+            @change-tag="spotsStore.setTagFilter"
+            @toggle-distance="spotsStore.setDistanceEnabled"
+            @change-distance="spotsStore.setMaxDistanceKm"
+            @use-my-location="handleUseMyLocation"
+            @toggle-owner-only="spotsStore.setOwnerOnly"
+            @edit-spot="handleEditSpot"
+            @delete-spot="handleDeleteSpot"
+            @clear-filters="spotsStore.resetFilters"
+            @prev-page="spotsStore.prevPage"
+            @next-page="spotsStore.nextPage"
+          />
+        </div>
 
-      <div class="map-shell">
-        <MapView
-          :spots="spotsStore.filteredSpots"
-          :loading="spotsStore.loading"
-          :error="spotsStore.error"
-          :selected-spot="selectedSpot"
-          @select-spot="handleSelectSpot"
-        />
-      </div>
-    </main>
+        <div class="map-shell">
+          <MapView
+            :spots="spotsStore.filteredSpots"
+            :loading="spotsStore.loading"
+            :error="spotsStore.error"
+            :selected-spot="selectedSpot"
+            @select-spot="handleSelectSpot"
+          />
+        </div>
+      </main>
+    </div>
 
     <div v-if="showLoginModal" class="auth-modal-backdrop" @click.self="closeLoginModal">
-      <section class="auth-modal" role="dialog" aria-modal="true" :aria-label="authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Actualizar contrasena' : 'Iniciar sesión')">
+      <section ref="loginModalRef" class="auth-modal" role="dialog" aria-modal="true" tabindex="-1" :aria-label="authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Actualizar contrasena' : 'Iniciar sesión')">
         <h2>{{ authMode === 'register' ? 'Crear cuenta' : (authMode === 'reset' ? 'Actualizar contrasena' : 'Iniciar sesión') }}</h2>
         <p class="auth-subtitle">
           {{ authMode === 'register' ? 'Crea tu cuenta para empezar a publicar spots.' : (authMode === 'reset' ? 'Introduce una nueva contrasena para recuperar tu cuenta.' : 'Accede para guardar y gestionar tus spots.') }}
@@ -877,7 +893,7 @@ onUnmounted(() => {
     </div>
 
     <div v-if="showCreateSpotModal" class="auth-modal-backdrop" @click.self="closeCreateSpotModal">
-      <section class="auth-modal auth-modal--wide" role="dialog" aria-modal="true" aria-label="Crear spot">
+      <section ref="createSpotModalRef" class="auth-modal auth-modal--wide" role="dialog" aria-modal="true" tabindex="-1" aria-label="Crear spot">
         <h2>Crear nuevo spot</h2>
         <p class="auth-subtitle">Paridad con legacy: título, coordenadas, categoría, tags y hasta 2 imágenes.</p>
 

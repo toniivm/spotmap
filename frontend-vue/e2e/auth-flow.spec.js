@@ -16,7 +16,16 @@ async function performLogin(page) {
   await page.locator('#login-email').fill(E2E_USER_EMAIL);
   await page.locator('#login-password').fill(E2E_USER_PASSWORD);
   await page.getByRole('button', { name: 'Entrar' }).click();
-  await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible({ timeout: 20000 });
+
+  const logoutButton = page.getByRole('button', { name: 'Cerrar sesión' });
+  const authError = page.getByText(/No se pudo iniciar sesi[oó]n/i);
+
+  const result = await Promise.race([
+    logoutButton.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'ok').catch(() => null),
+    authError.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'error').catch(() => null),
+  ]);
+
+  return result === 'ok';
 }
 
 async function performRegister(page) {
@@ -35,9 +44,9 @@ test.describe('SpotMap authenticated flow', () => {
     await page.goto('/');
     await openLogin(page);
 
-    await performLogin(page);
+    const loggedIn = await performLogin(page);
 
-    if (await page.getByText(/No se pudo iniciar sesión/i).isVisible().catch(() => false)) {
+    if (!loggedIn) {
       await performRegister(page);
     }
 

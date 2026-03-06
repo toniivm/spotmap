@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - release/**
+  pull_request:
+    branches:
+      - main
+      - staging
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend Lint/Test/Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend-vue
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend-vue/package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  backend:
+    name: Backend PHPUnit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          coverage: none
+          extensions: curl, sqlite3
+
+      - name: Download PHPUnit 10
+        run: |
+          mkdir -p tools
+          curl -Ls https://phar.phpunit.de/phpunit-10.phar -o tools/phpunit.phar
+          php tools/phpunit.phar --version
+
+      - name: Run backend tests
+        run: php tools/phpunit.phar --configuration backend/phpunit.xml.dist
+
+  e2e-smoke:
+    name: E2E Smoke (Desktop + Mobile)
+    runs-on: ubuntu-latest
+    needs: frontend
+    env:
+      E2E_USER_EMAIL: ${{ secrets.E2E_USER_EMAIL }}
+      E2E_USER_PASSWORD: ${{ secrets.E2E_USER_PASSWORD }}
+      E2E_MOD_EMAIL: ${{ secrets.E2E_MOD_EMAIL }}
+      E2E_MOD_PASSWORD: ${{ secrets.E2E_MOD_PASSWORD }}
+      REQUIRE_E2E_BUSINESS: ${{ (github.ref_name == 'staging' || startsWith(github.ref_name, 'release/')) && 'true' || 'false' }}
+    defaults:
+      run:
+        working-directory: frontend-vue
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend-vue/package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run smoke and recovery specs
+        run: |
+          npx playwright test \
+            e2e/smoke.spec.js \
+            e2e/recovery-flow.spec.js \
+            e2e/modal-a11y.spec.js \
+            e2e/business-flow.spec.js \
+            --project=desktop-chromium \
+            --project=mobile-chromium
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend-vue/playwright-report
+          if-no-files-found: ignore

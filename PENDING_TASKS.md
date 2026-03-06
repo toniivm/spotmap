@@ -1,7 +1,56 @@
 # SpotMap - Estado Real de Tareas
 
-**Última actualización:** 02 Mar 2026  
-**Estado general (real):** 5/15 completadas, 9 parciales, 1 pendiente crítica
+**Última actualización:** 06 Mar 2026  
+**Estado operativo verificado:** seguridad/auth reforzada, tests backend/frontend ejecutables, quedan gaps de release en CI, paridad Vue y mobile QA
+
+---
+
+## Plan operativo P1/P2 (06 Mar 2026)
+
+### P1 - Bloqueantes de release (ejecutar primero)
+
+1. Pipeline CI real en repositorio
+- Estado: completado (06 Mar 2026).
+- Evidencia: workflow `/.github/workflows/ci.yml` con jobs de frontend, backend y E2E smoke.
+- Entregable: lint+test+build frontend, phpunit backend (descarga PHPUnit 10 en CI) y Playwright smoke/recovery desktop+mobile.
+
+2. E2E de negocio completo (desktop + mobile)
+- Estado: parcial.
+- Hecho: smoke + auth + recovery en Playwright.
+- Falta: flujo end-to-end con moderacion/notificaciones y ejecucion estable en CI.
+- Entregable: spec unica de negocio (login -> crear pending -> aprobar/rechazar -> notificacion visible).
+
+3. Hardening accesibilidad de modales
+- Estado: parcial.
+- Evidencia: no hay patron `inert`/focus-trap unificado para todos los modales.
+- Entregable: helper comun de modal accessibility + tests E2E de teclado/escape/focus return.
+
+4. Cierre seguridad operativa de configuracion
+- Estado: parcial.
+- Hecho: fallback JWT endurecido + debug bool correcto + admin hardcode removido.
+- Falta: documentar checklist deploy y asegurar que `ALLOW_INSECURE_JWT_FALLBACK=false` en todos los entornos.
+
+### P2 - Paridad funcional y performance
+
+1. Paridad Vue vs legacy en social/features pendientes
+- Estado: pendiente parcial-alto.
+- Evidencia: faltan modulos Vue equivalentes de favoritos/comentarios/theme/i18n.
+- Entregable: migracion por modulos con matriz de paridad cerrada.
+
+2. Cache de roles con TTL
+- Estado: pendiente.
+- Evidencia: `backend/src/Roles.php` cachea en memoria sin TTL/invalidacion.
+- Entregable: TTL configurable + invalidacion segura + tests.
+
+3. Conversion de imagen a WebP en upload
+- Estado: parcial.
+- Evidencia: se valida/acepta webp, pero no hay conversion automatica JPEG/PNG -> WebP.
+- Entregable: pipeline opcional de conversion (GD/Imagick) con fallback seguro.
+
+4. Mobile readiness formal
+- Estado: parcial.
+- Hecho: layout responsive funcional y proyecto Playwright mobile.
+- Falta: matriz dispositivos, performance 4G, ajustes tactiles finos y criterio de "mobile listo" certificado.
 
 ---
 
@@ -56,7 +105,7 @@
 **Estado real:** Headers y CORS existen, pero falta endurecer política de orígenes en producción y tests más estrictos.
 
 ### [x] 10. Implementar CI/CD pipeline
-**Estado real:** Existen workflows de CI, seguridad y deploy en `.github/workflows`.
+**Estado real:** Workflow CI versionado en `.github/workflows/ci.yml` con validaciones frontend, backend y E2E smoke.
 
 ### [~] 11. Sistema de auditoría para moderación
 **Estado real:** Logging de auditoría y migración implementados; falta dashboard/visualización operativa.

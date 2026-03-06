@@ -8,6 +8,28 @@ namespace SpotMap;
  */
 class Auth
 {
+    private static function base64UrlDecode(string $value): ?string
+    {
+        $decoded = base64_decode(strtr($value, '-_', '+/'), true);
+        return $decoded === false ? null : $decoded;
+    }
+
+    private static function verifyHs256Signature(string $headerPart, string $payloadPart, string $signaturePart, string $secret): bool
+    {
+        if ($secret === '') {
+            return false;
+        }
+
+        $providedSignature = self::base64UrlDecode($signaturePart);
+        if ($providedSignature === null) {
+            return false;
+        }
+
+        $signingInput = $headerPart . '.' . $payloadPart;
+        $expectedSignature = hash_hmac('sha256', $signingInput, $secret, true);
+        return hash_equals($expectedSignature, $providedSignature);
+    }
+
     public static function getBearerToken(): ?string
     {
         $hdr = $_SERVER['HTTP_AUTHORIZATION']
@@ -94,9 +116,10 @@ class Auth
     public static function fetchUser(string $token): ?array
     {
         // Intentar validar contra Supabase primero
-        $url = rtrim(Config::get('SUPABASE_URL'), '/') . '/auth/v1/user';
-        $service = Config::get('SUPABASE_SERVICE_KEY');
-        $anon = Config::get('SUPABASE_ANON_KEY');
+        $supabaseUrl = trim((string)Config::get('SUPABASE_URL', ''));
+        $url = $supabaseUrl !== '' ? rtrim($supabaseUrl, '/') . '/auth/v1/user' : '';
+        $service = (string)Config::get('SUPABASE_SERVICE_KEY', '');
+        $anon = (string)Config::get('SUPABASE_ANON_KEY', '');
         $key = $service ?: $anon;
         
         if ($url && $key) {
@@ -131,20 +154,51 @@ class Auth
             }
         }
         
-        // Fallback: validar JWT localmente (para desarrollo sin Supabase)
+        // Fallback JWT local (solo para desarrollo o con secreto explícito)
         // JWT format: header.payload.signature
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
             error_log("[AUTH] Invalid JWT format");
             return null;
         }
+
+        $allowInsecureFallback = Config::getBool('ALLOW_INSECURE_JWT_FALLBACK', false);
+        if (Config::isProd() && !$allowInsecureFallback) {
+            error_log('[AUTH] Insecure JWT fallback disabled in production');
+            return null;
+        }
         
-        // Decodificar payload
+        // Decodificar header/payload
         try {
-            $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+            $headerRaw = self::base64UrlDecode($parts[0]);
+            $payloadRaw = self::base64UrlDecode($parts[1]);
+            if ($headerRaw === null || $payloadRaw === null) {
+                error_log('[AUTH] Invalid JWT base64 encoding');
+                return null;
+            }
+
+            $header = json_decode($headerRaw, true);
+            $payload = json_decode($payloadRaw, true);
             
             if (!$payload || !isset($payload['sub'])) {
                 error_log("[AUTH] Invalid JWT payload");
+                return null;
+            }
+
+            $alg = strtoupper((string)($header['alg'] ?? ''));
+            if ($alg !== 'HS256') {
+                error_log('[AUTH] Unsupported JWT alg in fallback mode');
+                return null;
+            }
+
+            $jwtSecret = trim((string)Config::get('SUPABASE_JWT_SECRET', ''));
+            if ($jwtSecret !== '') {
+                if (!self::verifyHs256Signature($parts[0], $parts[1], $parts[2], $jwtSecret)) {
+                    error_log('[AUTH] JWT signature validation failed');
+                    return null;
+                }
+            } elseif (!$allowInsecureFallback) {
+                error_log('[AUTH] JWT fallback requires SUPABASE_JWT_SECRET or ALLOW_INSECURE_JWT_FALLBACK=true');
                 return null;
             }
             

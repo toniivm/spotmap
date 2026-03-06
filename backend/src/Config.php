@@ -26,6 +26,7 @@ class Config
             'ENV' => 'development',
             'DEBUG' => true,
             'STATUS_VERBOSE' => false,
+            'ALLOW_INSECURE_JWT_FALLBACK' => false,
             'DB_HOST' => '127.0.0.1',
             'DB_PORT' => '3306',
             'DB_DATABASE' => 'spotmap',
@@ -133,7 +134,7 @@ class Config
 
     public static function isDebug(): bool
     {
-        return (bool)self::get('DEBUG', false);
+        return self::getBool('DEBUG', false);
     }
 
     public static function getAll(): array

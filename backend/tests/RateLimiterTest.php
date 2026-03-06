@@ -8,6 +8,10 @@ class RateLimiterTest extends TestCase
     protected function setUp(): void
     {
         $configRef = new ReflectionClass(SpotMap\Config::class);
+        $loadedProp = $configRef->getProperty('loaded');
+        $loadedProp->setAccessible(true);
+        $loadedProp->setValue(null, true);
+
         $configProp = $configRef->getProperty('config');
         $configProp->setAccessible(true);
         $config = $configProp->getValue();
